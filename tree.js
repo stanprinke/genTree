@@ -1,29 +1,16 @@
-let treeContainer = document.getElementById("treeContainer");
-let redrawDelay = null;
 let connectionsMargin = 4;
 let connectionInletWidth = 10;
+
+let treeContainer = document.getElementById("treeContainer");
+let treeContainerBox = null;
 let connectionInletVerticalOffset = null;
+let redrawDelay = null;
 
 // editable with sliders:
 let horizontalSpacing = 0;
-
-/** current timestamp as string: yyyy-MM-dd_HH-mm-ss */
-function getTimestamp() {
-    const pad = (n,s=2) => (`${new Array(s).fill(0)}${n}`).slice(-s);
-    const d = new Date();
-    return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-}
-
-function savePng() {
-    html2canvas(document.querySelector("#treeContainer")).then(canvas => {
-        let canvasUrl = canvas.toDataURL();
-        const tmpAnchor = document.createElement('a');
-        tmpAnchor.href = canvasUrl;
-        tmpAnchor.download = "tree_" + getTimestamp();
-        tmpAnchor.click();
-        tmpAnchor.remove();
-    });
-}
+let verticalSpacing = 0;
+let textVertMargins = 0;
+let lineThickness = 0;
 
 /**
  * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
@@ -80,19 +67,20 @@ function addNodeAt(x, y, node) {
     nodeDiv.style.left = x +'px';
     nodeDiv.style.top = y + 'px';
     treeContainer.appendChild(nodeDiv);
-    let treeContainerBox = treeContainer.getBoundingClientRect();
-    let boundingBox = (nodeDiv.firstChild ?? nodeDiv).getBoundingClientRect();
+    let firstLabelBox = (nodeDiv.firstChild ?? nodeDiv).getBoundingClientRect();
 
-    node.inputAnchorX = boundingBox.left - treeContainerBox.left - connectionsMargin;
-    node.outputAnchorX = boundingBox.right - treeContainerBox.left + connectionsMargin;
-    node.isEmptyNode = boundingBox.width == 0;
+    node.inputAnchorX = firstLabelBox.left - treeContainerBox.left - connectionsMargin;
+    node.outputAnchorX = firstLabelBox.right - treeContainerBox.left + connectionsMargin;
+    node.isEmptyNode = firstLabelBox.width == 0;
 
     if (connectionInletVerticalOffset == null) {
         // connecting line inlet pointing to the middle of the first line
         // the same offset will be used for other nodes (assuming here the first node is not empty)
-        connectionInletVerticalOffset = boundingBox.height / 2;
+        connectionInletVerticalOffset = firstLabelBox.height / 2;
     }
-    node.inputAnchorY = boundingBox.top + connectionInletVerticalOffset - treeContainerBox.top;
+
+    let nodeBoundingBox = nodeDiv.getBoundingClientRect();
+    node.inputAnchorY = nodeBoundingBox.top + connectionInletVerticalOffset + textVertMargins - treeContainerBox.top;
     node.outputAnchorY = node.inputAnchorY;
 }
 
@@ -122,7 +110,7 @@ function drawConnection(node1, node2) {
     ];
     let polyline = draw.polyline(points);
     polyline.fill('none');
-    polyline.stroke({ color: '#000', width: 2, linecap: 'round', linejoin: 'round' })
+    polyline.stroke({ color: '#000', width: lineThickness, linecap: 'round', linejoin: 'round' })
 
 }
 
@@ -137,14 +125,12 @@ function redraw() {
 
 function redrawWithDelay() {
     clearTimeout(redrawDelay);
-    redrawDelay = setTimeout(redraw, 300);
+    redrawDelay = setTimeout(redraw, 200);
 }
 
-function getPositionY(generation, positionInGen, areaHeight) {
-    let verticalParts = Math.pow(2, generation+1);
-    let partHeight = areaHeight / verticalParts;
-    let result = (positionInGen*2 + 1) * partHeight;
-    return result;
+function getPositionY(generation, positionInGen, maxGeneration) {
+    let partHeight = verticalSpacing * Math.pow(2, maxGeneration - generation);
+    return (positionInGen * 2 + 1) * partHeight;
 }
 
 function moveByOffset(elements, x, y) {
@@ -160,7 +146,7 @@ function nearestExponentOf2(N)
     return Math.pow(2, a) === N ?  a : a + 1;
 }
 
-// return zero-base generation (level in the tree, root is 0)
+// return zero-based generation (level in the tree, root is 0)
 function genForArrayIndex(N) {
     return nearestExponentOf2(N+2) - 1;
 }
@@ -169,13 +155,31 @@ function redrawImpl() {
     treeContainer.innerHTML = "";
     connectionInletVerticalOffset = null;
 
+    // expand horizontally, to avoid text wrapping
+    treeContainer.style.width = '9999px';
+    
+    treeContainerBox = treeContainer.getBoundingClientRect();
+
     let nodesArray = parseNodes(document.getElementById("treeInputData").value);
+
+    let maxGeneration = genForArrayIndex(nodesArray.length-1);
+
+    // create empty nodes, so the last generation has exactly 2^n elements
+    while(maxGeneration == genForArrayIndex(nodesArray.length )) {
+        nodesArray.push({});
+    }
+
+    let minVerticalPos = 99999;
+
     for (let i = 0; i < nodesArray.length; i++) {
         let generation = genForArrayIndex(i);
         let genSize = Math.pow(2, generation);
         let positionInGen = i - genSize + 1;
         let node = nodesArray[i];
-        addNodeAt(generation * horizontalSpacing, getPositionY(generation, positionInGen, treeContainer.offsetHeight), node);
+        let x = generation * horizontalSpacing;
+        let y = getPositionY(generation, positionInGen, maxGeneration);
+        minVerticalPos = Math.min(minVerticalPos, y);
+        addNodeAt(x, y, node);
     }
 
     for (let i = 0; i < (nodesArray.length-1) / 2; i++) {
@@ -186,7 +190,33 @@ function redrawImpl() {
         drawConnection(node, otherB);
     }
 
-    //moveByOffset(treeContainer.children, 100, -100);
+    if (textVertMargins < 0) {
+        minVerticalPos += textVertMargins;
+    }
+
+    moveByOffset(treeContainer.children, 2, -minVerticalPos);
+
+    // now crop treeContainer to the actual width/height
+    let maxRight = 0;
+    let maxBottom = 0;
+
+    for (let element of treeContainer.children) {
+        if (element.tagName.toLowerCase() == 'div') {
+            let boundingBox = element.getBoundingClientRect();
+            maxRight = Math.max(maxRight, boundingBox.right - treeContainerBox.left);
+            maxBottom = Math.max(maxBottom, boundingBox.bottom - treeContainerBox.top);
+        }
+    }
+
+    treeContainer.style.width = maxRight + 2 + 'px';
+    treeContainer.style.height = maxBottom + Math.abs(textVertMargins) + 'px';
+
+    for (let element of treeContainer.children) {
+        if (element.tagName.toLowerCase() == 'svg') {
+            element.style.width = treeContainer.style.width;
+            element.style.height = parseInt(treeContainer.style.height) + minVerticalPos + "px";
+        }
+    }
 }
 
 function init() {
@@ -195,34 +225,43 @@ function init() {
         redrawWithDelay();
     }
 
-    let slider1 = document.getElementById("heightSlider");
+    let slider1 = document.getElementById("verticalSpacingSlider");
     slider1.oninput = function() {
-        let label = document.getElementById("drawAreaHeight");
+        verticalSpacing = parseInt(this.value);
+        let label = document.getElementById("verticalSpacing");
         label.innerHTML = this.value;
-        treeContainer.style.height = this.value + "px";
         redraw();
     }
     slider1.dispatchEvent(new Event('input', {value: slider1.value}));
 
     let slider2 = document.getElementById("horizontalSpacingSlider");
     slider2.oninput = function() {
-        horizontalSpacing = this.value;
+        horizontalSpacing = parseInt(this.value);
         let label = document.getElementById("horizontalSpacing");
         label.innerHTML = horizontalSpacing;
         redraw();
     }
     slider2.dispatchEvent(new Event('input', {value: slider2.value}));
 
-    let slider3 = document.getElementById("textMarginsSlider");
+    let slider3 = document.getElementById("textVertMarginsSlider");
     slider3.oninput = function() {
-        let label = document.getElementById("textMargins");
+        let label = document.getElementById("textVertMargins");
         label.innerHTML = this.value;
+        textVertMargins = parseInt(this.value);
         setTextVerticalMargins(this.value);
         redraw();
     }
     slider3.dispatchEvent(new Event('input', {value: slider3.value}));
+
+
+    let slider4 = document.getElementById("lineThicknessSlider");
+    slider4.oninput = function() {
+        lineThickness = parseInt(this.value);
+        let label = document.getElementById("lineThickness");
+        label.innerHTML = this.value;
+        redraw();
+    }
+    slider4.dispatchEvent(new Event('input', {value: slider4.value}));
 }
 
 init();
-
-treeContainer.style.width = '1000px';
