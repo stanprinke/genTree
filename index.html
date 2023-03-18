@@ -33,21 +33,25 @@
         .text-type-a {
             font-size: 24px;
             color: blue;
+            width: fit-content;
         }
 
         .text-type-b {
             font-size: 14px;
             color: gray;
+            width: fit-content;
         }
 
         .text-type-c {
             font-size: 16px;
             color: black;
+            width: fit-content;
         }
 
         .text-type-d {
             font-size: 14px;
             color: #22DD22;
+            width: fit-content;
         }
 
         textarea {
@@ -67,15 +71,15 @@
 <body>
     <div class="d-print-none foreground">
         <div>
-            <input type="range" value="50" step="5" min="10" max="150" class="slider" id="verticalSpacingSlider">
+            <input type="range" value="48" step="2" min="10" max="100" class="slider" id="verticalSpacingSlider">
             Vertical spacing: <span id="verticalSpacing"></span>
         </div>
         <div>
-            <input type="range" value="200" step="20" min="100" max="700" class="slider" id="horizontalSpacingSlider">
+            <input type="range" value="300" step="20" min="100" max="900" class="slider" id="horizontalSpacingSlider">
             Horizontal spacing: <span id="horizontalSpacing"></span>
         </div>
         <div>
-            <input type="range" value="-5" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
+            <input type="range" value="-6" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
             Text vertical margins: <span id="textVertMargins"></span>
         </div>
         <div>

@@ -34,8 +34,8 @@ function parseNodes(treeAsJson) {
         throw new Error("failed to parse input: " + treeAsJson);
     if (result.length < 2)
         throw new Error("at least 2 nodes are required: " + treeAsJson);
-    if (result.length >= 64)
-        throw new Error("more than 63 nodes are not supported (yet?): " + treeAsJson);
+    if (result.length > 127)
+        throw new Error("more than 127 nodes are not supported (yet?): " + treeAsJson);
     return result;
 }
 
