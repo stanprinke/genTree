@@ -1,15 +1,17 @@
-let connectionsMargin = 4;
-let connectionInletWidth = 10;
-
 let treeContainer = document.getElementById("treeContainer");
 let treeContainerBox = null;
 let connectionInletVerticalOffset = null;
 let redrawDelay = null;
 
 // editable with sliders:
-let horizontalSpacing = 0;
 let verticalSpacing = 0;
+let horizontalSpacing = 0;
+let compactedHorizontalSpacing = 20;
+let numberOfCompactedGenerations = 1;
+
 let textVertMargins = 0;
+let connectionInletWidth = 10;
+let connectionsMargin = 4;
 let lineThickness = 0;
 
 /**
@@ -82,6 +84,12 @@ function addNodeAt(x, y, node) {
     let nodeBoundingBox = nodeDiv.getBoundingClientRect();
     node.inputAnchorY = nodeBoundingBox.top + connectionInletVerticalOffset + textVertMargins - treeContainerBox.top;
     node.outputAnchorY = node.inputAnchorY;
+
+    // top/bottom anchors, used when compacting is enabled
+    node.topAnchorX = compactedHorizontalSpacing + nodeBoundingBox.left - treeContainerBox.left;
+    node.topAnchorY = node.isEmptyNode ? node.inputAnchorY : (nodeBoundingBox.top - treeContainerBox.top - connectionsMargin + textVertMargins);
+    node.bottomAnchorX = node.topAnchorX;
+    node.bottomAnchorY = node.isEmptyNode ? node.inputAnchorY : (nodeBoundingBox.bottom - treeContainerBox.top + connectionsMargin - textVertMargins);
 }
 
 function addTextLines(nodeDiv, lines, cssClass) {
@@ -97,21 +105,49 @@ function addTextLine(nodeDiv, line, cssClass) {
     nodeDiv.appendChild(paragraph);
 }
 
-function drawConnection(node1, node2) {
-    let draw = SVG().addTo('#treeContainer').size(treeContainer.clientWidth, treeContainer.clientHeight);
-    draw.css('position', 'absolute')
-    draw.css('z-index', '20')
-    let points = [
+function drawStandardConnection(node1, node2) {
+    drawPoly([
         // special case for empty nodes, to make all connecting lines gapless
         [node1.isEmptyNode ? (node1.outputAnchorX - 2*connectionsMargin) : node1.outputAnchorX, node1.outputAnchorY],
         [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
         [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
-        [node2.inputAnchorX], [node2.inputAnchorY]
-    ];
-    let polyline = draw.polyline(points);
-    polyline.fill('none');
-    polyline.stroke({ color: '#000', width: lineThickness, linecap: 'round', linejoin: 'round' })
+        [node2.inputAnchorX, node2.inputAnchorY]
+    ]);
+}
 
+function drawCompactedConnection(node1, node2) {
+    let startX = null;
+    let startY = null;
+    if (node1.outputAnchorY > node2.inputAnchorY) {
+        // first node lower than second one
+        startX = node1.topAnchorX;
+        startY = node1.topAnchorY;
+    } else {
+        startX = node1.bottomAnchorX;
+        startY = node1.bottomAnchorY;
+    }
+    drawPoly([
+        [startX, startY],
+        [startX, node2.inputAnchorY],
+        [node2.inputAnchorX, node2.inputAnchorY]
+    ]);
+
+    // special case for empty nodes, to make all connecting lines gapless
+    if (node1.isEmptyNode) {
+        drawPoly([
+            [node1.outputAnchorX - 2*connectionsMargin, node1.outputAnchorY],
+            [node1.topAnchorX, node1.outputAnchorY]
+        ]);
+    }
+}
+
+function drawPoly(pointsArray) {
+    let draw = SVG().addTo('#treeContainer').size(treeContainer.clientWidth, treeContainer.clientHeight);
+    draw.css('position', 'absolute')
+    draw.css('z-index', '20')
+    let polyline = draw.polyline(pointsArray);
+    polyline.fill('none');
+    polyline.stroke({ color: '#000', width: lineThickness, linecap: 'butt', linejoin: 'round' })
 }
 
 function redraw() {
@@ -176,7 +212,8 @@ function redrawImpl() {
         let genSize = Math.pow(2, generation);
         let positionInGen = i - genSize + 1;
         let node = nodesArray[i];
-        let x = generation * horizontalSpacing;
+        let x = horizontalSpacing * (Math.max(0, generation - numberOfCompactedGenerations))
+            + (compactedHorizontalSpacing + connectionInletWidth + connectionsMargin) * Math.min(generation, numberOfCompactedGenerations); 
         let y = getPositionY(generation, positionInGen, maxGeneration);
         minVerticalPos = Math.min(minVerticalPos, y);
         addNodeAt(x, y, node);
@@ -186,8 +223,15 @@ function redrawImpl() {
         let node = nodesArray[i];
         let otherA = nodesArray[i*2+1]
         let otherB = nodesArray[i*2+2]
-        drawConnection(node, otherA);
-        drawConnection(node, otherB);
+
+        let generation = genForArrayIndex(i);
+        if (generation < numberOfCompactedGenerations) {
+            drawCompactedConnection(node, otherA);
+            drawCompactedConnection(node, otherB);
+        } else {
+            drawStandardConnection(node, otherA);
+            drawStandardConnection(node, otherB);
+        }
     }
 
     if (textVertMargins < 0) {
@@ -225,43 +269,81 @@ function init() {
         redrawWithDelay();
     }
 
-    let slider1 = document.getElementById("verticalSpacingSlider");
-    slider1.oninput = function() {
+    let slider = document.getElementById("verticalSpacingSlider");
+    slider.oninput = function() {
         verticalSpacing = parseInt(this.value);
         let label = document.getElementById("verticalSpacing");
         label.innerHTML = this.value;
         redraw();
     }
-    slider1.dispatchEvent(new Event('input', {value: slider1.value}));
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
 
-    let slider2 = document.getElementById("horizontalSpacingSlider");
-    slider2.oninput = function() {
+    slider = document.getElementById("horizontalSpacingSlider");
+    slider.oninput = function() {
         horizontalSpacing = parseInt(this.value);
         let label = document.getElementById("horizontalSpacing");
         label.innerHTML = horizontalSpacing;
         redraw();
     }
-    slider2.dispatchEvent(new Event('input', {value: slider2.value}));
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
 
-    let slider3 = document.getElementById("textVertMarginsSlider");
-    slider3.oninput = function() {
+    slider = document.getElementById("compactedHorizontalSpacingSlider");
+    slider.oninput = function() {
+        compactedHorizontalSpacing = parseInt(this.value);
+        let label = document.getElementById("compactedHorizontalSpacing");
+        label.innerHTML = this.value;
+        redraw();
+    }
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
+
+    slider = document.getElementById("numberOfCompactedGenerationsSlider");
+    slider.oninput = function() {
+        numberOfCompactedGenerations = parseInt(this.value);
+        let label = document.getElementById("numberOfCompactedGenerations");
+        label.innerHTML = this.value;
+        redraw();
+    }
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
+
+    ///////////////////
+    ///////////////////
+
+    slider = document.getElementById("textVertMarginsSlider");
+    slider.oninput = function() {
         let label = document.getElementById("textVertMargins");
         label.innerHTML = this.value;
         textVertMargins = parseInt(this.value);
         setTextVerticalMargins(this.value);
         redraw();
     }
-    slider3.dispatchEvent(new Event('input', {value: slider3.value}));
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
 
+    slider = document.getElementById("connectionInletWidthSlider");
+    slider.oninput = function() {
+        connectionInletWidth = parseInt(this.value);
+        let label = document.getElementById("connectionInletWidth");
+        label.innerHTML = this.value;
+        redraw();
+    }
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
 
-    let slider4 = document.getElementById("lineThicknessSlider");
-    slider4.oninput = function() {
+    slider = document.getElementById("connectionsMarginSlider");
+    slider.oninput = function() {
+        connectionsMargin = parseInt(this.value);
+        let label = document.getElementById("connectionsMargin");
+        label.innerHTML = this.value;
+        redraw();
+    }
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
+
+    slider = document.getElementById("lineThicknessSlider");
+    slider.oninput = function() {
         lineThickness = parseInt(this.value);
         let label = document.getElementById("lineThickness");
         label.innerHTML = this.value;
         redraw();
     }
-    slider4.dispatchEvent(new Event('input', {value: slider4.value}));
+    slider.dispatchEvent(new Event('input', {value: slider.value}));
 }
 
 init();

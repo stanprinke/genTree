@@ -27,7 +27,7 @@
         }
 
         .slider {
-            width: 400px;
+            width: 200px;
         }
 
         .text-type-a {
@@ -54,6 +54,10 @@
             width: fit-content;
         }
 
+        th, td {
+            padding-right: 65px;
+        }
+
         textarea {
             resize: both;
             width: 1000px;
@@ -70,22 +74,49 @@
 
 <body>
     <div class="d-print-none foreground">
-        <div>
-            <input type="range" value="48" step="2" min="10" max="100" class="slider" id="verticalSpacingSlider">
-            Vertical spacing: <span id="verticalSpacing"></span>
-        </div>
-        <div>
-            <input type="range" value="300" step="20" min="100" max="900" class="slider" id="horizontalSpacingSlider">
-            Horizontal spacing: <span id="horizontalSpacing"></span>
-        </div>
-        <div>
-            <input type="range" value="-6" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
-            Text vertical margins: <span id="textVertMargins"></span>
-        </div>
-        <div>
-            <input type="range" value="2" step="1" min="0" max="10" class="slider" id="lineThicknessSlider">
-            Line thickness: <span id="lineThickness"></span>
-        </div>
+        <table><tr>
+            <td>
+                <div>
+                    <div>
+                        <input type="range" value="48" step="2" min="10" max="100" class="slider" id="verticalSpacingSlider">
+                        Vertical spacing: <span id="verticalSpacing"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="300" step="20" min="100" max="900" class="slider" id="horizontalSpacingSlider">
+                        Horizontal spacing: <span id="horizontalSpacing"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="20" step="4" min="4" max="100" class="slider" id="compactedHorizontalSpacingSlider">
+                        Compacted spacing: <span id="compactedHorizontalSpacing"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="1" step="1" min="0" max="5" class="slider" id="numberOfCompactedGenerationsSlider">
+                        # of compacted levels: <span id="numberOfCompactedGenerations"></span>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div>
+                    <div>
+                        <input type="range" value="-6" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
+                        Text vertical margins: <span id="textVertMargins"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="10" step="1" min="4" max="50" class="slider" id="connectionInletWidthSlider">
+                        Inlet width: <span id="connectionInletWidth"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="4" step="1" min="0" max="20" class="slider" id="connectionsMarginSlider">
+                        Line margin: <span id="connectionsMargin"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="2" step="1" min="0" max="10" class="slider" id="lineThicknessSlider">
+                        Line thickness: <span id="lineThickness"></span>
+                    </div>
+                </div>
+            </td>
+        </tr></table>
+        <hr/>
     </div>
 
     <div id="treeContainer"></div>
