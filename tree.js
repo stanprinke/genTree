@@ -93,9 +93,9 @@ function addNodeAt(x, y, node) {
     node.outputAnchorX = firstLabelBox.right - treeContainerBox.left + connectionsMargin;
     node.isEmptyNode = firstLabelBox.width == 0;
 
-    if (connectionInletVerticalOffset == null) {
+    if (!node.isEmptyNode) {
         // connecting line inlet pointing to the middle of the first line
-        // the same offset will be used for other nodes (assuming here the first node is not empty)
+        // the same offset will be used for subsequent empty nodes
         connectionInletVerticalOffset = firstLabelBox.height / 2;
     }
 
