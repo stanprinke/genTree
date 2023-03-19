@@ -21,6 +21,30 @@ let BfontSize = 0;
 let CfontSize = 0;
 let DfontSize = 0;
 
+/** current timestamp as string: yyyy-MM-dd_HH-mm-ss */
+function getTimestamp() {
+    const pad = (n,s=2) => (`${new Array(s).fill(0)}${n}`).slice(-s);
+    const d = new Date();
+    return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+
+async function save2png() {
+    redraw();
+    let node = document.getElementById('treeContainer');
+
+    htmlToImage.toPng(node)
+        .then(function (dataUrl) {
+            const tmpAnchor = document.createElement('a');
+            tmpAnchor.href = dataUrl;
+            tmpAnchor.download = "tree_" + getTimestamp();
+            tmpAnchor.click();
+            tmpAnchor.remove();
+        })
+        .catch(function (error) {
+            console.error('oops, something went wrong!', error);
+    });
+}
+
 /**
  * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
  * @param text The text to be rendered.
@@ -362,6 +386,14 @@ function parseParamsFromSliders() {
     redraw();
 }
 
+function clearInputParams() {
+    //window.history.replaceState(null, "", window.location.href.split('?')[0]);
+    window.location = window.location.href.split('?')[0];
+    parseUrlParams();
+    parseParamsFromSliders();
+    redraw();
+}
+
 function parseUrlParams() {
     let urlParams = new URLSearchParams(window.location.search);
 
@@ -383,13 +415,11 @@ function parseUrlParams() {
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
     if (urlParams.has(paramName)) {
-        console.log(sliderName);
         document.getElementById(sliderName).value = parseInt(urlParams.get(paramName));
     }
 }
 
 function updateUrlParamFromSlider(urlParams, paramName, sliderName) {
-    console.log(sliderName);
     urlParams.append(paramName, document.getElementById(sliderName).value);
 }
 
@@ -415,6 +445,7 @@ function init() {
     document.getElementById("DfontSizeSlider").oninput = parseParamsFromSliders;
 
     parseParamsFromSliders();
+    onInputDataChangedWithDelay();
 }
 
 init();
