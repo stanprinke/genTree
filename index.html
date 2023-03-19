@@ -31,26 +31,26 @@
         }
 
         .text-type-a {
-            font-size: 24px;
+            font-size: 22px;
             color: blue;
             width: fit-content;
         }
 
         .text-type-b {
-            font-size: 14px;
-            color: gray;
+            font-size: 22px;
+            color: red;
             width: fit-content;
         }
 
         .text-type-c {
             font-size: 16px;
-            color: black;
+            color: #2A7070;
             width: fit-content;
         }
 
         .text-type-d {
-            font-size: 14px;
-            color: #22DD22;
+            font-size: 16px;
+            color: black;
             width: fit-content;
         }
 
@@ -98,7 +98,7 @@
             <td>
                 <div>
                     <div>
-                        <input type="range" value="-6" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
+                        <input type="range" value="-8" step="1" min="-14" max="2" class="slider" id="textVertMarginsSlider">
                         Text vertical margins: <span id="textVertMargins"></span>
                     </div>
                     <div>
@@ -123,16 +123,8 @@
 
     <div class="d-print-none">
         <hr/>
-        <h4>Input data (JSON):</h4>
-        <textarea id="treeInputData">[
-{"linesA":["line a1-1"], "linesB":["line b1-1"], "linesC":["line c1-1", "line c2-1"]},
-{"linesA":["line a1-2"], "linesB":["line b1-2"], "linesC":["line c1-2", "line c2-2"]},
-{},
-{"linesA":["line a1-4"], "linesB":[], "linesC":["line c1-4", "line c2-4"], "linesD":[]},
-{},
-{"linesA":["line a1-6"], "linesC":["line c1-6"]},
-{"linesA":["line a1-7"], "linesB":["line b1-7"], "linesC":["line c1-7", "line c2-7"], "linesD":["line d1-7"]}
-]</textarea>
+        <h4>Input data (JSON): <button class="btn btn-warning" onclick="clearInputData()">use default input</button></h4>
+        <textarea id="treeInputData" maxlength="65535"></textarea>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.1.2/dist/svg.min.js"></script>

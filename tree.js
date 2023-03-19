@@ -1,7 +1,8 @@
 let treeContainer = document.getElementById("treeContainer");
 let treeContainerBox = null;
 let connectionInletVerticalOffset = null;
-let redrawDelay = null;
+let inputDataChangedDelay = null;
+const localStoreKey = "genTreeInputData";
 
 // editable with sliders:
 let verticalSpacing = 0;
@@ -34,8 +35,8 @@ function parseNodes(treeAsJson) {
     let result = JSON.parse(treeAsJson);
     if (!result?.length)
         throw new Error("failed to parse input: " + treeAsJson);
-    if (result.length < 2)
-        throw new Error("at least 2 nodes are required: " + treeAsJson);
+    if (result.length < 1)
+        throw new Error("at least 1 node is required: " + treeAsJson);
     if (result.length > 127)
         throw new Error("more than 127 nodes are not supported (yet?): " + treeAsJson);
     return result;
@@ -152,16 +153,14 @@ function drawPoly(pointsArray) {
 
 function redraw() {
     try {
+        const start = performance.now();
         redrawImpl();
+        const redrawTime = parseInt(performance.now() - start);
+        console.log(`Redraw time: ${redrawTime} ms`);
     } catch (error) {
         treeContainer.innerHTML = "ERROR: " + error;
         console.error(error);
     }
-}
-
-function redrawWithDelay() {
-    clearTimeout(redrawDelay);
-    redrawDelay = setTimeout(redraw, 200);
 }
 
 function getPositionY(generation, positionInGen, maxGeneration) {
@@ -263,87 +262,79 @@ function redrawImpl() {
     }
 }
 
+function updateLabelFromSlider(labelName, sliderName) {
+    let slider = document.getElementById(sliderName);
+    document.getElementById(labelName).innerHTML = slider.value;
+    return parseInt(slider.value);
+}
+
+function parseAllParams() {
+    verticalSpacing = updateLabelFromSlider('verticalSpacing', 'verticalSpacingSlider');
+    horizontalSpacing = updateLabelFromSlider('horizontalSpacing', 'horizontalSpacingSlider');
+    compactedHorizontalSpacing = updateLabelFromSlider('compactedHorizontalSpacing', 'compactedHorizontalSpacingSlider');
+    numberOfCompactedGenerations = updateLabelFromSlider('numberOfCompactedGenerations', 'numberOfCompactedGenerationsSlider');
+
+    textVertMargins = updateLabelFromSlider('textVertMargins', 'textVertMarginsSlider');
+    connectionInletWidth = updateLabelFromSlider('connectionInletWidth', 'connectionInletWidthSlider');
+    connectionsMargin = updateLabelFromSlider('connectionsMargin', 'connectionsMarginSlider');
+    lineThickness = updateLabelFromSlider('lineThickness', 'lineThicknessSlider');
+
+    setTextVerticalMargins(textVertMargins);
+
+    redraw();
+}
+
+function onInputDataChangedWithDelay() {
+    clearTimeout(inputDataChangedDelay);
+    inputDataChangedDelay = setTimeout(onInputDataChanged, 200);
+}
+
+function onInputDataChanged() {
+    localStorage.setItem(localStoreKey, document.getElementById("treeInputData").value);
+    redraw();
+}
+
+function defaultInputData() {
+    return `[
+    {"linesA":["1 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {},
+    {"linesB":["3 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {"linesA":["4 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {},
+    {"linesA":["6 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {"linesB":["7 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {"linesA":["8 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {"linesB":["9 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
+    {"linesA":["10 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]}
+]`;
+}
+
+function clearInputData() {
+    localStorage.removeItem(localStoreKey);
+    populateInputTextArea();
+    redraw();
+}
+
+function populateInputTextArea() {
+    document.getElementById("treeInputData").value = localStorage.getItem(localStoreKey)?? defaultInputData();
+}
+
 function init() {
-    let treeInputData = document.getElementById("treeInputData");
-    treeInputData.oninput = function() {
-        redrawWithDelay();
-    }
+    populateInputTextArea();
 
-    let slider = document.getElementById("verticalSpacingSlider");
-    slider.oninput = function() {
-        verticalSpacing = parseInt(this.value);
-        let label = document.getElementById("verticalSpacing");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
+    document.getElementById("treeInputData").oninput = onInputDataChangedWithDelay;
 
-    slider = document.getElementById("horizontalSpacingSlider");
-    slider.oninput = function() {
-        horizontalSpacing = parseInt(this.value);
-        let label = document.getElementById("horizontalSpacing");
-        label.innerHTML = horizontalSpacing;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
+    document.getElementById("verticalSpacingSlider").oninput = parseAllParams;
+    document.getElementById("horizontalSpacingSlider").oninput = parseAllParams;
+    document.getElementById("compactedHorizontalSpacingSlider").oninput = parseAllParams;
+    document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseAllParams;
 
-    slider = document.getElementById("compactedHorizontalSpacingSlider");
-    slider.oninput = function() {
-        compactedHorizontalSpacing = parseInt(this.value);
-        let label = document.getElementById("compactedHorizontalSpacing");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
+    document.getElementById("textVertMarginsSlider").oninput = parseAllParams;
+    document.getElementById("connectionInletWidthSlider").oninput = parseAllParams;
+    document.getElementById("connectionsMarginSlider").oninput = parseAllParams;
+    document.getElementById("lineThicknessSlider").oninput = parseAllParams;
 
-    slider = document.getElementById("numberOfCompactedGenerationsSlider");
-    slider.oninput = function() {
-        numberOfCompactedGenerations = parseInt(this.value);
-        let label = document.getElementById("numberOfCompactedGenerations");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
-
-    ///////////////////
-    ///////////////////
-
-    slider = document.getElementById("textVertMarginsSlider");
-    slider.oninput = function() {
-        let label = document.getElementById("textVertMargins");
-        label.innerHTML = this.value;
-        textVertMargins = parseInt(this.value);
-        setTextVerticalMargins(this.value);
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
-
-    slider = document.getElementById("connectionInletWidthSlider");
-    slider.oninput = function() {
-        connectionInletWidth = parseInt(this.value);
-        let label = document.getElementById("connectionInletWidth");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
-
-    slider = document.getElementById("connectionsMarginSlider");
-    slider.oninput = function() {
-        connectionsMargin = parseInt(this.value);
-        let label = document.getElementById("connectionsMargin");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
-
-    slider = document.getElementById("lineThicknessSlider");
-    slider.oninput = function() {
-        lineThickness = parseInt(this.value);
-        let label = document.getElementById("lineThickness");
-        label.innerHTML = this.value;
-        redraw();
-    }
-    slider.dispatchEvent(new Event('input', {value: slider.value}));
+    parseAllParams();
 }
 
 init();
