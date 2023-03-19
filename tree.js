@@ -7,13 +7,18 @@ const localStoreKey = "genTreeInputData";
 // editable with sliders:
 let verticalSpacing = 0;
 let horizontalSpacing = 0;
-let compactedHorizontalSpacing = 20;
-let numberOfCompactedGenerations = 1;
+let compactedHorizontalSpacing = 0;
+let numberOfCompactedGenerations = 0;
 
 let textVertMargins = 0;
-let connectionInletWidth = 10;
-let connectionsMargin = 4;
+let connectionInletWidth = 0;
+let connectionsMargin = 0;
 let lineThickness = 0;
+
+let AfontSize = 0;
+let BfontSize = 0;
+let CfontSize = 0;
+let DfontSize = 0;
 
 /**
  * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
@@ -53,10 +58,22 @@ function getCSSRule(ruleName) {
     });
 }
 
-function setTextVerticalMargins(margin) {
+function updateTextVerticalMargins(margin) {
     let myRule = getCSSRule('#treeContainer p');
     myRule.style.marginTop = margin + "px";
     myRule.style.marginBottom = margin + "px";
+}
+
+function updateFontSize(cssRuleName, newFontSize) {
+    let myRule = getCSSRule(cssRuleName);
+    myRule.style.fontSize = newFontSize + "px";
+}
+
+function updateFontSizes() {
+    updateFontSize('.text-type-a', AfontSize);
+    updateFontSize('.text-type-b', BfontSize);
+    updateFontSize('.text-type-c', CfontSize);
+    updateFontSize('.text-type-d', DfontSize);
 }
 
 function addNodeAt(x, y, node) {
@@ -262,6 +279,41 @@ function redrawImpl() {
     }
 }
 
+function onInputDataChangedWithDelay() {
+    clearTimeout(inputDataChangedDelay);
+    inputDataChangedDelay = setTimeout(onInputDataChanged, 200);
+}
+
+function onInputDataChanged() {
+    localStorage.setItem(localStoreKey, document.getElementById("treeInputData").value);
+    redraw();
+}
+
+function defaultInputData() {
+    return `[
+        {"linesA":["1 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {},
+        {"linesB":["3 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesA":["4 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {},
+        {"linesA":["6 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesB":["7 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesB":["9 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesA":["10 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]}
+]`;
+}
+
+function clearInputData() {
+    localStorage.removeItem(localStoreKey);
+    populateInputTextArea();
+    redraw();
+}
+
+function populateInputTextArea() {
+    document.getElementById("treeInputData").value = localStorage.getItem(localStoreKey)?? defaultInputData();
+}
+
 function updateLabelFromSlider(labelName, sliderName) {
     let slider = document.getElementById(sliderName);
     document.getElementById(labelName).innerHTML = slider.value;
@@ -279,44 +331,15 @@ function parseAllParams() {
     connectionsMargin = updateLabelFromSlider('connectionsMargin', 'connectionsMarginSlider');
     lineThickness = updateLabelFromSlider('lineThickness', 'lineThicknessSlider');
 
-    setTextVerticalMargins(textVertMargins);
+    AfontSize = updateLabelFromSlider('AfontSize', 'AfontSizeSlider');
+    BfontSize = updateLabelFromSlider('BfontSize', 'BfontSizeSlider');
+    CfontSize = updateLabelFromSlider('CfontSize', 'CfontSizeSlider');
+    DfontSize = updateLabelFromSlider('DfontSize', 'DfontSizeSlider');
+
+    updateTextVerticalMargins(textVertMargins);
+    updateFontSizes();
 
     redraw();
-}
-
-function onInputDataChangedWithDelay() {
-    clearTimeout(inputDataChangedDelay);
-    inputDataChangedDelay = setTimeout(onInputDataChanged, 200);
-}
-
-function onInputDataChanged() {
-    localStorage.setItem(localStoreKey, document.getElementById("treeInputData").value);
-    redraw();
-}
-
-function defaultInputData() {
-    return `[
-    {"linesA":["1 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {},
-    {"linesB":["3 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {"linesA":["4 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {},
-    {"linesA":["6 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {"linesB":["7 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {"linesA":["8 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {"linesB":["9 line B"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]},
-    {"linesA":["10 line A"], "linesC":["line B"], "linesD":["line C", "line C 2", "line C 3"]}
-]`;
-}
-
-function clearInputData() {
-    localStorage.removeItem(localStoreKey);
-    populateInputTextArea();
-    redraw();
-}
-
-function populateInputTextArea() {
-    document.getElementById("treeInputData").value = localStorage.getItem(localStoreKey)?? defaultInputData();
 }
 
 function init() {
@@ -333,6 +356,11 @@ function init() {
     document.getElementById("connectionInletWidthSlider").oninput = parseAllParams;
     document.getElementById("connectionsMarginSlider").oninput = parseAllParams;
     document.getElementById("lineThicknessSlider").oninput = parseAllParams;
+
+    document.getElementById("AfontSizeSlider").oninput = parseAllParams;
+    document.getElementById("BfontSizeSlider").oninput = parseAllParams;
+    document.getElementById("CfontSizeSlider").oninput = parseAllParams;
+    document.getElementById("DfontSizeSlider").oninput = parseAllParams;
 
     parseAllParams();
 }
