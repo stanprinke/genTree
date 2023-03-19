@@ -28,21 +28,39 @@ function getTimestamp() {
     return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
 }
 
-async function save2png() {
-    redraw();
-    let node = document.getElementById('treeContainer');
+function save2pngImpl() {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            try {
+                redraw();
 
-    htmlToImage.toPng(node)
-        .then(function (dataUrl) {
-            const tmpAnchor = document.createElement('a');
-            tmpAnchor.href = dataUrl;
-            tmpAnchor.download = "tree_" + getTimestamp();
-            tmpAnchor.click();
-            tmpAnchor.remove();
-        })
-        .catch(function (error) {
-            console.error('oops, something went wrong!', error);
+                htmlToImage.toPng(document.getElementById('treeContainer'))
+                    .then(function (dataUrl) {
+                        const tmpAnchor = document.createElement('a');
+                        tmpAnchor.href = dataUrl;
+                        tmpAnchor.download = "tree_" + getTimestamp();
+                        tmpAnchor.click();
+                        tmpAnchor.remove();
+                    })
+                    .catch(function (error) {
+                        console.error('oops, something went wrong!', error);
+                });
+            } finally {
+                resolve();
+            }
+        }, 1);
     });
+}
+
+async function asyncSave2png() {
+    try {
+        document.getElementById('saveSpinner').classList.remove("d-none");
+        document.getElementById('saveButton').classList.add("disabled");
+        await save2pngImpl();
+    } finally {
+        document.getElementById('saveSpinner').classList.add("d-none");
+        document.getElementById('saveButton').classList.remove("disabled");
+    }
 }
 
 /**

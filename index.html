@@ -147,7 +147,10 @@
 
     <div class="d-print-none foreground">
         <hr/>
-        <button class="btn btn-primary" onclick="save2png()">Save as PNG</button>
+        <button id="saveButton" class="btn btn-primary" onclick="asyncSave2png()">
+            <span id="saveSpinner" class="spinner-border spinner-border-sm d-none"></span>
+            Save as PNG
+        </button>
         <hr/>
         <h4>Input data (JSON): <button class="btn btn-warning" onclick="clearInputData()">use default input</button></h4>
         <textarea id="treeInputData" maxlength="65535"></textarea>
