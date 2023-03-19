@@ -322,7 +322,7 @@ function updateLabelFromSlider(labelName, sliderName) {
     return parseInt(slider.value);
 }
 
-function parseAllParams() {
+function parseParamsFromSliders() {
     verticalSpacing = updateLabelFromSlider('verticalSpacing', 'verticalSpacingSlider');
     horizontalSpacing = updateLabelFromSlider('horizontalSpacing', 'horizontalSpacingSlider');
     compactedHorizontalSpacing = updateLabelFromSlider('compactedHorizontalSpacing', 'compactedHorizontalSpacingSlider');
@@ -341,30 +341,80 @@ function parseAllParams() {
     updateTextVerticalMargins(textVertMargins);
     updateFontSizes();
 
+    let urlParams = new URLSearchParams();
+    updateUrlParamFromSlider(urlParams, 'vs', 'verticalSpacingSlider');
+    updateUrlParamFromSlider(urlParams, 'hs', 'horizontalSpacingSlider');
+    updateUrlParamFromSlider(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
+    updateUrlParamFromSlider(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
+
+    updateUrlParamFromSlider(urlParams, 'tm', 'textVertMarginsSlider');
+    updateUrlParamFromSlider(urlParams, 'iw', 'connectionInletWidthSlider');
+    updateUrlParamFromSlider(urlParams, 'lm', 'connectionsMarginSlider');
+    updateUrlParamFromSlider(urlParams, 'lt', 'lineThicknessSlider');
+    
+    updateUrlParamFromSlider(urlParams, 'afs', 'AfontSizeSlider');
+    updateUrlParamFromSlider(urlParams, 'bfs', 'BfontSizeSlider');
+    updateUrlParamFromSlider(urlParams, 'cfs', 'CfontSizeSlider');
+    updateUrlParamFromSlider(urlParams, 'dfs', 'DfontSizeSlider');
+
+    window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
+
     redraw();
+}
+
+function parseUrlParams() {
+    let urlParams = new URLSearchParams(window.location.search);
+
+    updateSliderFromUrlParam(urlParams, 'vs', 'verticalSpacingSlider');
+    updateSliderFromUrlParam(urlParams, 'hs', 'horizontalSpacingSlider');
+    updateSliderFromUrlParam(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
+    updateSliderFromUrlParam(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
+
+    updateSliderFromUrlParam(urlParams, 'tm', 'textVertMarginsSlider');
+    updateSliderFromUrlParam(urlParams, 'iw', 'connectionInletWidthSlider');
+    updateSliderFromUrlParam(urlParams, 'lm', 'connectionsMarginSlider');
+    updateSliderFromUrlParam(urlParams, 'lt', 'lineThicknessSlider');
+    
+    updateSliderFromUrlParam(urlParams, 'afs', 'AfontSizeSlider');
+    updateSliderFromUrlParam(urlParams, 'bfs', 'BfontSizeSlider');
+    updateSliderFromUrlParam(urlParams, 'cfs', 'CfontSizeSlider');
+    updateSliderFromUrlParam(urlParams, 'dfs', 'DfontSizeSlider');
+}
+
+function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
+    if (urlParams.has(paramName)) {
+        console.log(sliderName);
+        document.getElementById(sliderName).value = parseInt(urlParams.get(paramName));
+    }
+}
+
+function updateUrlParamFromSlider(urlParams, paramName, sliderName) {
+    console.log(sliderName);
+    urlParams.append(paramName, document.getElementById(sliderName).value);
 }
 
 function init() {
     populateInputTextArea();
+    parseUrlParams();
 
     document.getElementById("treeInputData").oninput = onInputDataChangedWithDelay;
 
-    document.getElementById("verticalSpacingSlider").oninput = parseAllParams;
-    document.getElementById("horizontalSpacingSlider").oninput = parseAllParams;
-    document.getElementById("compactedHorizontalSpacingSlider").oninput = parseAllParams;
-    document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseAllParams;
+    document.getElementById("verticalSpacingSlider").oninput = parseParamsFromSliders;
+    document.getElementById("horizontalSpacingSlider").oninput = parseParamsFromSliders;
+    document.getElementById("compactedHorizontalSpacingSlider").oninput = parseParamsFromSliders;
+    document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseParamsFromSliders;
 
-    document.getElementById("textVertMarginsSlider").oninput = parseAllParams;
-    document.getElementById("connectionInletWidthSlider").oninput = parseAllParams;
-    document.getElementById("connectionsMarginSlider").oninput = parseAllParams;
-    document.getElementById("lineThicknessSlider").oninput = parseAllParams;
+    document.getElementById("textVertMarginsSlider").oninput = parseParamsFromSliders;
+    document.getElementById("connectionInletWidthSlider").oninput = parseParamsFromSliders;
+    document.getElementById("connectionsMarginSlider").oninput = parseParamsFromSliders;
+    document.getElementById("lineThicknessSlider").oninput = parseParamsFromSliders;
 
-    document.getElementById("AfontSizeSlider").oninput = parseAllParams;
-    document.getElementById("BfontSizeSlider").oninput = parseAllParams;
-    document.getElementById("CfontSizeSlider").oninput = parseAllParams;
-    document.getElementById("DfontSizeSlider").oninput = parseAllParams;
+    document.getElementById("AfontSizeSlider").oninput = parseParamsFromSliders;
+    document.getElementById("BfontSizeSlider").oninput = parseParamsFromSliders;
+    document.getElementById("CfontSizeSlider").oninput = parseParamsFromSliders;
+    document.getElementById("DfontSizeSlider").oninput = parseParamsFromSliders;
 
-    parseAllParams();
+    parseParamsFromSliders();
 }
 
 init();
