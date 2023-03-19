@@ -1,4 +1,5 @@
 let treeContainer = document.getElementById("treeContainer");
+let redrawTime = document.getElementById("redrawTime");
 let treeContainerBox = null;
 let connectionInletVerticalOffset = null;
 let inputDataChangedDelay = null;
@@ -172,8 +173,8 @@ function redraw() {
     try {
         const start = performance.now();
         redrawImpl();
-        const redrawTime = parseInt(performance.now() - start);
-        console.log(`Redraw time: ${redrawTime} ms`);
+        const elapsed = parseInt(performance.now() - start);
+        redrawTime.innerHTML = elapsed;
     } catch (error) {
         treeContainer.innerHTML = "ERROR: " + error;
         console.error(error);
@@ -205,10 +206,10 @@ function genForArrayIndex(N) {
 
 function redrawImpl() {
     treeContainer.innerHTML = "";
-    connectionInletVerticalOffset = null;
+    connectionInletVerticalOffset = 6; // some default, in case in case first nodes are empty
 
     // expand horizontally, to avoid text wrapping
-    treeContainer.style.width = '9999px';
+    treeContainer.style.width = '3999px';
     
     treeContainerBox = treeContainer.getBoundingClientRect();
 
@@ -260,8 +261,9 @@ function redrawImpl() {
     let maxRight = 0;
     let maxBottom = 0;
 
-    for (let element of treeContainer.children) {
-        if (element.tagName.toLowerCase() == 'div') {
+    for (let element of treeContainer.getElementsByTagName("*")) {
+        let elName = element.tagName.toLowerCase();
+        if (elName == 'div' || elName == 'p' || elName =='polyline') {
             let boundingBox = element.getBoundingClientRect();
             maxRight = Math.max(maxRight, boundingBox.right - treeContainerBox.left);
             maxBottom = Math.max(maxBottom, boundingBox.bottom - treeContainerBox.top);
@@ -269,7 +271,7 @@ function redrawImpl() {
     }
 
     treeContainer.style.width = maxRight + 2 + 'px';
-    treeContainer.style.height = maxBottom + Math.abs(textVertMargins) + 'px';
+    treeContainer.style.height = maxBottom + 4 + 'px';
 
     for (let element of treeContainer.children) {
         if (element.tagName.toLowerCase() == 'svg') {

@@ -10,6 +10,8 @@
             background-color: #EEEEEE;
         }
 
+/*        * { outline: 1px solid red; } */
+
         #treeContainer {
             background-color: white;
             position: relative;
@@ -74,6 +76,7 @@
 
 <body>
     <div class="d-print-none foreground">
+        <p>Redraw time: <span id="redrawTime"></span> [ms]</p>
         <table><tr>
             <td>
                 <div>
@@ -82,7 +85,7 @@
                         Vertical spacing: <span id="verticalSpacing"></span>
                     </div>
                     <div>
-                        <input type="range" value="300" step="20" min="100" max="900" class="slider" id="horizontalSpacingSlider">
+                        <input type="range" value="300" step="10" min="100" max="700" class="slider" id="horizontalSpacingSlider">
                         Horizontal spacing: <span id="horizontalSpacing"></span>
                     </div>
                     <div>
