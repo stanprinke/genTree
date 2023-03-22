@@ -167,20 +167,30 @@ function addTextLine(nodeDiv, line, cssClass) {
 }
 
 function drawStandardConnection(node1, node2) {
-    drawPoly([
-        // special case for empty nodes, to make all connecting lines gapless
-        [node1.isEmptyNode ? (node1.outputAnchorX - 2*connectionsMargin) : node1.outputAnchorX, node1.outputAnchorY],
-        [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
-        [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
-        [node2.inputAnchorX, node2.inputAnchorY]
-    ]);
+    if (node1.outputAnchorY > node2.inputAnchorY) {
+        // first node lower than the second one - include horizontal line
+        drawPoly([
+            // special case for empty nodes, to make all connecting lines gapless
+            [node1.isEmptyNode ? (node1.outputAnchorX - 2*connectionsMargin) : node1.outputAnchorX, node1.outputAnchorY],
+            [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
+            [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
+            [node2.inputAnchorX, node2.inputAnchorY]
+        ]);
+    } else {
+        // exclude horizontal line, so it doesn't get drawn twice (slightly thicker)
+        drawPoly([
+            [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
+            [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
+            [node2.inputAnchorX, node2.inputAnchorY]
+        ]);
+    }
 }
 
 function drawCompactedConnection(node1, node2) {
     let startX = null;
     let startY = null;
     if (node1.outputAnchorY > node2.inputAnchorY) {
-        // first node lower than second one
+        // first node lower than the second one
         startX = node1.topAnchorX;
         startY = node1.topAnchorY;
     } else {
