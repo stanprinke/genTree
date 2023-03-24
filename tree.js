@@ -142,7 +142,7 @@ let DfontSize = 0;
     function saveZipWithPngs() {
         console.log("saving zip");
         zipWithPngs.generateAsync({type:"blob"}).then(function(content) {
-            saveAs(content, "example.zip");
+            saveAs(content, "trees_" + getTimestamp() + ".zip");
         });
         zipWithPngs = null;
         console.log("done");
