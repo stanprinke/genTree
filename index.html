@@ -152,6 +152,7 @@
             <span id="saveSpinner" class="spinner-border spinner-border-sm d-none"></span>
             Save as PNG
         </button>
+        <button class="btn btn-secondary" onclick="processMultipleFiles()">Save PNGs for multiple files</button>
         <hr/>
         <h4>Input data (JSON): <button class="btn btn-warning" onclick="clearInputData()">use default input</button></h4>
         <textarea id="treeInputData" maxlength="65535"></textarea>
@@ -159,6 +160,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.1.2/dist/svg.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
     <script src="tree.js"></script>    
 </body>
 </html>

@@ -21,63 +21,141 @@ let BfontSize = 0;
 let CfontSize = 0;
 let DfontSize = 0;
 
-/** current timestamp as string: yyyy-MM-dd_HH-mm-ss */
-function getTimestamp() {
-    const pad = (n,s=2) => (`${new Array(s).fill(0)}${n}`).slice(-s);
-    const d = new Date();
-    return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-}
 
-function save2pngImpl() {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            try {
-                redraw();
+/**** Saving current tree as PNG ****/ 
 
-                htmlToImage.toPng(document.getElementById('treeContainer'))
-                    .then(function (dataUrl) {
-                        const tmpAnchor = document.createElement('a');
-                        tmpAnchor.href = dataUrl;
-                        tmpAnchor.download = "tree_" + getTimestamp();
-                        tmpAnchor.click();
-                        tmpAnchor.remove();
-                    })
-                    .catch(function (error) {
-                        console.error('oops, something went wrong!', error);
-                });
-            } finally {
-                resolve();
-            }
-        }, 1);
-    });
-}
-
-async function asyncSave2png() {
-    try {
-        document.getElementById('saveSpinner').classList.remove("d-none");
-        document.getElementById('saveButton').classList.add("disabled");
-        await save2pngImpl();
-    } finally {
-        document.getElementById('saveSpinner').classList.add("d-none");
-        document.getElementById('saveButton').classList.remove("disabled");
+    /** current timestamp as string: yyyy-MM-dd_HH-mm-ss */
+    function getTimestamp() {
+        const pad = (n,s=2) => (`${new Array(s).fill(0)}${n}`).slice(-s);
+        const d = new Date();
+        return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
     }
-}
 
-/**
- * Uses canvas.measureText to compute and return the width of the given text of given font in pixels.
- * @param text The text to be rendered.
- * @param {String} font The css font descriptor that text is to be rendered with (e.g. "14px verdana").
- * @see http://stackoverflow.com/questions/118241/calculate-text-width-with-javascript/21015393#21015393
- */
-function getTextWidth(text, font) {
-    // if given, use cached canvas for better performance
-    // else, create new canvas
-    let canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
-    let context = canvas.getContext("2d");
-    context.font = font;
-    let metrics = context.measureText(text);
-    return metrics.width;
-};
+    function save2pngImpl() {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                try {
+                    redraw();
+
+                    htmlToImage.toPng(document.getElementById('treeContainer'))
+                        .then(function (dataUrl) {
+                            const tmpAnchor = document.createElement('a');
+                            tmpAnchor.href = dataUrl;
+                            tmpAnchor.download = "tree_" + getTimestamp();
+                            tmpAnchor.click();
+                            tmpAnchor.remove();
+                        })
+                        .catch(function (error) {
+                            console.error('oops, something went wrong!', error);
+                        });
+                } finally {
+                    resolve();
+                }
+            }, 1);
+        });
+    }
+
+    async function asyncSave2png() {
+        try {
+            document.getElementById('saveSpinner').classList.remove("d-none");
+            document.getElementById('saveButton').classList.add("disabled");
+            await save2pngImpl();
+        } finally {
+            document.getElementById('saveSpinner').classList.add("d-none");
+            document.getElementById('saveButton').classList.remove("disabled");
+        }
+    }
+
+
+/**** Saving trees from multiple files as zipped PNGs ****/ 
+
+    let jsonFilesQueue = [];
+    let processedFiles = [];
+    let zipWithPngs = null;
+
+    function changeExtension(filename, fromExt, toExt) {
+        let root = filename.substring(0, filename.length - fromExt.length);
+        return `${root}${toExt}`;
+    }
+
+    async function processMultipleFiles() {
+        if (jsonFilesQueue.length) {
+            throw new Error("array 'jsonFiles' is not empty!");
+        }
+
+        jsonFilesQueue = [];
+        processedFiles = [];
+
+        const dirHandle = await window.showDirectoryPicker();
+        for await (const entry of dirHandle.values()) {
+            
+            if (entry.kind == 'file' && entry.name.endsWith('.json')) {
+                // Read the contents of the file as text
+                const fileHandle = await entry.getFile();
+                const fileContents = await fileHandle.text();
+                jsonFilesQueue.push({ fileName: entry.name, fileContents });
+            }
+        }
+
+        console.log(`Found ${jsonFilesQueue.length} json file(s) to process`)
+        if (jsonFilesQueue.length) {
+            zipWithPngs = new JSZip();
+
+            setTimeout(() => {
+                processNextJsonFromQueue();
+            }, 1);
+        }
+    }
+
+    async function processNextJsonFromQueue() {
+        if (!jsonFilesQueue.length) {
+            saveZipWithPngs();
+        } else {
+            let currFile = jsonFilesQueue.shift();
+            console.log("Processing file: " + currFile.fileName);
+            document.getElementById("treeInputData").value = currFile.fileContents;
+            redraw();
+
+            setTimeout(() => {
+                addPngScreenshotToZip(currFile.fileName);
+            }, 1);
+        }
+    }
+
+    async function addPngScreenshotToZip(fileName) {
+        await htmlToImage.toBlob(document.getElementById('treeContainer'))
+        .then(function (dataUrl) {
+            console.log("adding file to zip: " + fileName);
+            zipWithPngs.file(changeExtension(fileName, '.json', '.png'), dataUrl);
+            processedFiles.push(fileName);
+        })
+        .catch(function (error) {
+            console.error('oops, something went wrong!!! ' + fileName, error);
+            processedFiles.push(fileName + " ERROR: " + error);
+        });
+
+        setTimeout(() => {
+            processNextJsonFromQueue();        
+        }, 1);
+    }
+
+    function saveZipWithPngs() {
+        console.log("saving zip");
+        zipWithPngs.generateAsync({type:"blob"}).then(function(content) {
+            saveAs(content, "example.zip");
+        });
+        zipWithPngs = null;
+        console.log("done");
+
+        document.getElementById("treeInputData").value =
+            `[{"linesA":["finished processing ${processedFiles.length} files!"], "linesD":${JSON.stringify(processedFiles)}}]`;
+        redraw();
+    }
+
+
+
+
+/**** ****/
 
 function parseNodes(treeAsJson) {
     let result = JSON.parse(treeAsJson);
@@ -415,7 +493,6 @@ function parseParamsFromSliders() {
 }
 
 function clearInputParams() {
-    //window.history.replaceState(null, "", window.location.href.split('?')[0]);
     window.location = window.location.href.split('?')[0];
     parseUrlParams();
     parseParamsFromSliders();
