@@ -455,16 +455,17 @@ function onInputDataChanged() {
 
 function defaultInputData() {
     return `[
-        {"linesA":["1 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesA":["1 line A line A line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
         {},
-        {"linesB":["3 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
+        {"linesB":["3 line B line B line B"], "linesC":["line C"], "linesD":["line D"]},
         {"linesA":["4 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
         {},
-        {"linesA":["6 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
-        {"linesB":["7 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
-        {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
-        {"linesB":["9 line B"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
-        {"linesA":["10 line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]}
+        {"linesA":["6 line A"], "linesC":["line C"], "linesD":["line D"]},
+        {"linesB":["7 line B"], "linesC":["line C"], "linesD":["line D"]},
+        {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D"]},
+        {"linesB":["9 line B"], "linesC":["line C"], "linesD":["line D"]},
+        {"linesA":["10 line A"], "linesC":["line C"], "linesD":["line D"]},
+        {"linesB":["11 line B"], "linesC":["line C"], "linesD":["line D"]}
 ]`;
 }
 
