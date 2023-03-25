@@ -11,6 +11,11 @@
             margin: 5px 10px;
         }
 
+        th, td {
+            border: 1px solid black;
+            padding: 5px 15px;
+        }
+
 /*        * { outline: 1px solid red; } */
 
         #treeContainer {
@@ -55,10 +60,6 @@
             font-size: 16px;
             color: black;
             width: fit-content;
-        }
-
-        th, td {
-            padding-right: 65px;
         }
 
         textarea {
@@ -148,11 +149,14 @@
 
     <div class="d-print-none foreground">
         <hr/>
-        <button id="saveButton" class="btn btn-primary" onclick="asyncSave2png()">
+        <button id="saveButton" class="btn btn-primary" onclick="save2png()">
             <span id="saveSpinner" class="spinner-border spinner-border-sm d-none"></span>
             Save as PNG
         </button>
-        <button class="btn btn-secondary" onclick="processMultipleFiles()">Save PNGs for multiple files</button>
+        <button id="saveManyButton" class="btn btn-secondary" onclick="saveMany2png()">
+            <span id="saveManySpinner" class="spinner-border spinner-border-sm d-none"></span>
+            Save PNGs for multiple files
+        </button>
         <hr/>
         <h4>Input data (JSON): <button class="btn btn-warning" onclick="clearInputData()">use default input</button></h4>
         <textarea id="treeInputData" maxlength="65535"></textarea>

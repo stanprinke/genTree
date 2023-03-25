@@ -31,36 +31,35 @@ let DfontSize = 0;
         return `${pad(d.getFullYear(),4)}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
     }
 
-    function save2pngImpl() {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                try {
-                    redraw();
-
-                    htmlToImage.toPng(document.getElementById('treeContainer'))
-                        .then(function (dataUrl) {
-                            const tmpAnchor = document.createElement('a');
-                            tmpAnchor.href = dataUrl;
-                            tmpAnchor.download = "tree_" + getTimestamp();
-                            tmpAnchor.click();
-                            tmpAnchor.remove();
-                        })
-                        .catch(function (error) {
-                            console.error('oops, something went wrong!', error);
-                        });
-                } finally {
-                    resolve();
-                }
-            }, 1);
-        });
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    async function asyncSave2png() {
+    async function save2pngImpl() {
+        redraw();
+
+        try {
+            let dataUrl = await htmlToImage.toPng(document.getElementById('treeContainer'));
+            const tmpAnchor = document.createElement('a');
+            tmpAnchor.href = dataUrl;
+            tmpAnchor.download = "tree_" + getTimestamp();
+            tmpAnchor.click();
+            tmpAnchor.remove();
+        }
+        catch (error) {
+            console.error("ERROR: " + error);
+            showInfo("ERROR:", error);
+        }
+    }
+
+    async function save2png() {
         try {
             document.getElementById('saveSpinner').classList.remove("d-none");
             document.getElementById('saveButton').classList.add("disabled");
+            await sleep(20);
             await save2pngImpl();
         } finally {
+            await sleep(200);
             document.getElementById('saveSpinner').classList.add("d-none");
             document.getElementById('saveButton').classList.remove("disabled");
         }
@@ -78,22 +77,38 @@ let DfontSize = 0;
         return `${root}${toExt}`;
     }
 
-    async function processMultipleFiles() {
+    async function saveMany2png() {
+        try {
+            document.getElementById('saveManySpinner').classList.remove("d-none");
+            document.getElementById('saveManyButton').classList.add("disabled");
+            await sleep(20);
+            await saveMany2pngImpl();
+        } finally {
+            document.getElementById('saveManySpinner').classList.add("d-none");
+            document.getElementById('saveManyButton').classList.remove("disabled");
+        }
+    }
+
+    async function saveMany2pngImpl() {
         if (jsonFilesQueue.length) {
             throw new Error("array 'jsonFiles' is not empty!");
         }
 
         jsonFilesQueue = [];
         processedFiles = [];
+        let otherFilesCount = 0;
 
         const dirHandle = await window.showDirectoryPicker();
         for await (const entry of dirHandle.values()) {
-            
-            if (entry.kind == 'file' && entry.name.endsWith('.json')) {
-                // Read the contents of the file as text
-                const fileHandle = await entry.getFile();
-                const fileContents = await fileHandle.text();
-                jsonFilesQueue.push({ fileName: entry.name, fileContents });
+            if (entry.kind == 'file') {
+                if (entry.name.endsWith('.json')) {
+                    // Read the contents of the file as text
+                    const fileHandle = await entry.getFile();
+                    const fileContents = await fileHandle.text();
+                    jsonFilesQueue.push({ fileName: entry.name, fileContents });
+                } else {
+                    otherFilesCount++;
+                }
             }
         }
 
@@ -104,6 +119,8 @@ let DfontSize = 0;
             setTimeout(() => {
                 processNextJsonFromQueue();
             }, 1);
+        } else {
+            showInfo("No '.json' files found!", `There were ${otherFilesCount} other file(s) in the selected directory`);
         }
     }
 
@@ -123,19 +140,19 @@ let DfontSize = 0;
     }
 
     async function addPngScreenshotToZip(fileName) {
-        await htmlToImage.toBlob(document.getElementById('treeContainer'))
-        .then(function (dataUrl) {
+        try {
             console.log("adding file to zip: " + fileName);
-            zipWithPngs.file(changeExtension(fileName, '.json', '.png'), dataUrl);
+            let png = await htmlToImage.toBlob(document.getElementById('treeContainer'));
+            zipWithPngs.file(changeExtension(fileName, '.json', '.png'), png);
             processedFiles.push(fileName);
-        })
-        .catch(function (error) {
-            console.error('oops, something went wrong!!! ' + fileName, error);
+        }
+        catch(error) {
             processedFiles.push(fileName + " ERROR: " + error);
-        });
+            console.error('ERROR on file: ' + fileName, error);
+        };
 
         setTimeout(() => {
-            processNextJsonFromQueue();        
+            processNextJsonFromQueue();     
         }, 1);
     }
 
@@ -147,12 +164,20 @@ let DfontSize = 0;
         zipWithPngs = null;
         console.log("done");
 
-        document.getElementById("treeInputData").value =
-            `[{"linesA":["finished processing ${processedFiles.length} files!"], "linesD":${JSON.stringify(processedFiles)}}]`;
-        redraw();
+        showInfo(`finished processing ${processedFiles.length} files!`, processedFiles.join('<br/>'));
     }
 
+    function showInfo(message, details) {
+        treeContainer.innerHTML =
+            `<div style="outline: 4px solid red; padding: 50px; width: fit-content;">
+                <h3>${message}</h3>
+                <p>${details}</p>
+                <br/>
+                <button id="btnTmpInfo" type="button" class="btn btn-info" onclick="redraw()">Dismiss this message</button>
+            </div>`;
 
+        adjustTreeContainerSize();
+    }
 
 
 /**** ****/
@@ -163,8 +188,8 @@ function parseNodes(treeAsJson) {
         throw new Error("failed to parse input: " + treeAsJson);
     if (result.length < 1)
         throw new Error("at least 1 node is required: " + treeAsJson);
-    if (result.length > 127)
-        throw new Error("more than 127 nodes are not supported (yet?): " + treeAsJson);
+    if (result.length > 255)
+        throw new Error("more than 255 nodes are not supported (yet?): " + treeAsJson);
     return result;
 }
 
@@ -387,13 +412,26 @@ function redrawImpl() {
 
     moveByOffset(treeContainer.children, 2, -minVerticalPos);
 
-    // now crop treeContainer to the actual width/height
+    adjustTreeContainerSize();
+
+    for (let element of treeContainer.children) {
+        if (element.tagName.toLowerCase() == 'svg') {
+            element.style.width = treeContainer.style.width;
+            element.style.height = parseInt(treeContainer.style.height) + minVerticalPos + "px";
+        }
+    }
+}
+
+function adjustTreeContainerSize() {
     let maxRight = 0;
     let maxBottom = 0;
 
+    treeContainer.style.width = '3999px';
+    treeContainerBox = treeContainer.getBoundingClientRect();
+
     for (let element of treeContainer.getElementsByTagName("*")) {
         let elName = element.tagName.toLowerCase();
-        if (elName == 'div' || elName == 'p' || elName =='polyline') {
+        if (elName !='svg') {
             let boundingBox = element.getBoundingClientRect();
             maxRight = Math.max(maxRight, boundingBox.right - treeContainerBox.left);
             maxBottom = Math.max(maxBottom, boundingBox.bottom - treeContainerBox.top);
@@ -402,13 +440,6 @@ function redrawImpl() {
 
     treeContainer.style.width = maxRight + 2 + 'px';
     treeContainer.style.height = maxBottom + 4 + 'px';
-
-    for (let element of treeContainer.children) {
-        if (element.tagName.toLowerCase() == 'svg') {
-            element.style.width = treeContainer.style.width;
-            element.style.height = parseInt(treeContainer.style.height) + minVerticalPos + "px";
-        }
-    }
 }
 
 function onInputDataChangedWithDelay() {
