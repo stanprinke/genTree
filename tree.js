@@ -296,6 +296,15 @@ function drawCompactedConnection(node1, node2) {
         // first node lower than the second one
         startX = node1.topAnchorX;
         startY = node1.topAnchorY;
+
+        // include horizontal line, to make all connecting lines gapless
+        // - for "compacted" connections this only needs te be drawn for empty nodes
+        if (node1.isEmptyNode) {
+            drawPoly([
+                [node1.outputAnchorX - 2*connectionsMargin, node1.outputAnchorY],
+                [node1.topAnchorX, node1.outputAnchorY]
+            ]);
+        }
     } else {
         startX = node1.bottomAnchorX;
         startY = node1.bottomAnchorY;
@@ -305,14 +314,6 @@ function drawCompactedConnection(node1, node2) {
         [startX, node2.inputAnchorY],
         [node2.inputAnchorX, node2.inputAnchorY]
     ]);
-
-    // special case for empty nodes, to make all connecting lines gapless
-    if (node1.isEmptyNode) {
-        drawPoly([
-            [node1.outputAnchorX - 2*connectionsMargin, node1.outputAnchorY],
-            [node1.topAnchorX, node1.outputAnchorY]
-        ]);
-    }
 }
 
 function drawPoly(pointsArray) {
