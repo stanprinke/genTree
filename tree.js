@@ -168,12 +168,26 @@ let DfontSize = 0;
     }
 
     function showInfo(message, details) {
+        treeContainer.style.width = '999px';
+
         treeContainer.innerHTML =
             `<div style="outline: 4px solid red; padding: 50px; width: fit-content;">
                 <h3>${message}</h3>
                 <p>${details}</p>
                 <br/>
                 <button id="btnTmpInfo" type="button" class="btn btn-info" onclick="redraw()">Dismiss this message</button>
+            </div>`;
+
+        adjustTreeContainerSize();
+    }
+
+    function showError(message, details) {
+        treeContainer.style.width = '999px';
+
+        treeContainer.innerHTML =
+            `<div style="outline: 12px solid red; padding: 50px; width: fit-content;">
+                <h3>${message}</h3>
+                <p>${details}</p>
             </div>`;
 
         adjustTreeContainerSize();
@@ -189,7 +203,7 @@ function parseNodes(treeAsJson) {
     if (result.length < 1)
         throw new Error("at least 1 node is required: " + treeAsJson);
     if (result.length > 255)
-        throw new Error("more than 255 nodes are not supported (yet?): " + treeAsJson);
+        throw new Error("more than 255 nodes are not supported: " + treeAsJson);
     return result;
 }
 
@@ -332,8 +346,8 @@ function redraw() {
         const elapsed = parseInt(performance.now() - start);
         redrawTime.innerHTML = elapsed;
     } catch (error) {
-        treeContainer.innerHTML = "ERROR: " + error;
         console.error(error);
+        showError("ERROR:", error);
     }
 }
 
@@ -365,7 +379,7 @@ function redrawImpl() {
     connectionInletVerticalOffset = 6; // some default, in case in case first nodes are empty
 
     // expand horizontally, to avoid text wrapping
-    treeContainer.style.width = '3999px';
+    treeContainer.style.width = '4999px';
     
     treeContainerBox = treeContainer.getBoundingClientRect();
 
@@ -427,7 +441,6 @@ function adjustTreeContainerSize() {
     let maxRight = 0;
     let maxBottom = 0;
 
-    treeContainer.style.width = '3999px';
     treeContainerBox = treeContainer.getBoundingClientRect();
 
     for (let element of treeContainer.getElementsByTagName("*")) {
