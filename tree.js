@@ -127,8 +127,10 @@ let DfontSize = 0;
 
     async function processNextJsonFromQueue() {
         if (!jsonFilesQueue.length) {
+            updateBatchProgress("");
             saveZipWithPngs();
         } else {
+            updateBatchProgress(`${jsonFilesQueue.length} file(s) left to process...`)
             let currFile = jsonFilesQueue.shift();
             console.log("Processing file: " + currFile.fileName);
             document.getElementById("treeInputData").value = currFile.fileContents;
@@ -137,6 +139,17 @@ let DfontSize = 0;
             setTimeout(() => {
                 addPngScreenshotToZip(currFile.fileName);
             }, 1);
+        }
+    }
+
+    function updateBatchProgress(message) {
+        let batchProgressInfo = document.getElementById('batchProgressInfo');
+        if (message.length) {
+            batchProgressInfo.classList.remove("d-none");
+            batchProgressInfo.innerHTML = message;
+        } else {
+            batchProgressInfo.classList.add("d-none");
+            batchProgressInfo.innerHTML = "";
         }
     }
 
@@ -596,7 +609,7 @@ const checkZoomLevel = () => {
         warning.classList.add("d-none");
     } else {
         warning.classList.remove("d-none");
-        warning.innerHTML = `Warning! Browser zoom is set to ${currentZoom}%, output PNG files will be scaled`;
+        warning.innerHTML = `Warning! Browser zoom is set to ${currentZoom}%, output PNG files will also be scaled`;
     }
 };
 
