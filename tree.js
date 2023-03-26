@@ -178,7 +178,17 @@ let DfontSize = 0;
         zipWithPngs = null;
         console.log("done");
 
-        showInfo(`finished processing ${processedFiles.length} files!`, processedFiles.join('<br/>'));
+        if (processedFiles.length < 22) {
+            showInfo(
+                `finished processing ${processedFiles.length} files!`,
+                processedFiles.join('<br/>'));
+        } else {
+            let first10 = processedFiles.slice(0,10);
+            let last10 = processedFiles.slice(-10);
+            showInfo(
+                `finished processing ${processedFiles.length} files!`,
+                first10.join('<br/>') + `<br/>[...${processedFiles.length - 20} more...]<br/>` + last10.join('<br/>'));
+        }
     }
 
     function showInfo(message, details) {
