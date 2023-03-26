@@ -3,6 +3,7 @@ let redrawTime = document.getElementById("redrawTime");
 let treeContainerBox = null;
 let connectionInletVerticalOffset = null;
 let inputDataChangedDelay = null;
+let removeZoomListener = null;
 const localStoreKey = "genTreeInputData";
 
 // editable with sliders:
@@ -574,7 +575,33 @@ function updateUrlParamFromSlider(urlParams, paramName, sliderName) {
     urlParams.append(paramName, document.getElementById(sliderName).value);
 }
 
+const checkZoomLevel = () => {
+    if (removeZoomListener != null) {
+        removeZoomListener();
+    }
+    let mqString = `(resolution: ${window.devicePixelRatio}dppx)`;
+    let media = matchMedia(mqString);
+    media.addEventListener("change", checkZoomLevel);
+    removeZoomListener = function () {
+        media.removeEventListener("change", checkZoomLevel);
+    };
+
+    let currentZoom = window.devicePixelRatio * 100;
+    currentZoom = Math.round(currentZoom * 100) / 100
+
+    console.log("current zoom: " + currentZoom);
+
+    let warning = document.getElementById('zoomLevelWarning');
+    if (currentZoom == 100) {
+        warning.classList.add("d-none");
+    } else {
+        warning.classList.remove("d-none");
+        warning.innerHTML = `Warning! Browser zoom is set to ${currentZoom}%, output PNG files will be scaled`;
+    }
+};
+
 function init() {
+    checkZoomLevel();
     populateInputTextArea();
     parseUrlParams();
 
