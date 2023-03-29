@@ -75,6 +75,19 @@
             width: fit-content;
         }
 
+        .ref-big {
+            font-size: 22px;
+            font-weight: bold;
+            color: black;
+            width: fit-content;
+        }
+
+        .ref-small {
+            font-size: 16px;
+            color: black;
+            width: fit-content;
+        }
+
         textarea {
             resize: both;
             width: 1000px;
@@ -137,20 +150,20 @@
             <td>
                 <div>
                     <div>
-                        <input type="range" value="19" step="1" min="8" max="24" class="slider" id="AfontSizeSlider">
-                        "A" font size: <span id="AfontSize"></span>
+                        <input type="range" value="19" step="1" min="8" max="24" class="slider" id="majorFontSizeSlider">
+                        major font size: <span id="majorFontSize"></span>
                     </div>
                     <div>
-                        <input type="range" value="19" step="1" min="8" max="24" class="slider" id="BfontSizeSlider">
-                        "B" font size: <span id="BfontSize"></span>
+                        <input type="range" value="14" step="1" min="8" max="24" class="slider" id="minorFontSizeSlider">
+                        minor font size: <span id="minorFontSize"></span>
                     </div>
                     <div>
-                        <input type="range" value="14" step="1" min="8" max="24" class="slider" id="CfontSizeSlider">
-                        "C" font size: <span id="CfontSize"></span>
+                        <input type="range" value="-2" step="1" min="-10" max="4" class="slider" id="refsVertPaddingSlider">
+                        refs vertical padding: <span id="refsVertPadding"></span>
                     </div>
                     <div>
-                        <input type="range" value="14" step="1" min="8" max="24" class="slider" id="DfontSizeSlider">
-                        "D" font size: <span id="DfontSize"></span>
+                        <input type="range" value="4" step="1" min="0" max="20" class="slider" id="refsHorizPaddingSlider">
+                        refs horizontal padding: <span id="refsHorizPadding"></span>
                     </div>
                 </div>
             </td>
