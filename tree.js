@@ -16,6 +16,7 @@ let textVertMargins = 0;
 let connectionInletWidth = 0;
 let connectionsMargin = 0;
 let lineThickness = 0;
+let alignWithPixels = true;
 
 let majorFontSize = 0;
 let minorFontSize = 0;
@@ -478,6 +479,19 @@ function drawCompactedConnection(node1, node2) {
 }
 
 function drawPoly(pointsArray) {
+    if (alignWithPixels) {
+        if (lineThickness % 2 == 1) {
+            pointsArray.forEach(function(element) {
+                    element[0] = Math.round(element[0] + 0.5) - 0.5;
+                    element[1] = Math.round(element[1] + 0.5) - 0.5;
+                });
+        } else {
+            pointsArray.forEach(function(element) {
+                element[0] = Math.round(element[0]);
+                element[1] = Math.round(element[1]);
+            });
+        }
+    }
     let draw = SVG().addTo('#treeContainer').size(treeContainer.clientWidth, treeContainer.clientHeight);
     draw.css('position', 'absolute')
     draw.css('z-index', '20')
@@ -651,6 +665,10 @@ function updateLabelFromSlider(labelName, sliderName) {
     return parseInt(slider.value);
 }
 
+function getBoolFromCheckbox(elementName) {
+    return document.getElementById(elementName).checked;
+}
+
 function parseParamsFromSliders() {
     verticalSpacing = updateLabelFromSlider('verticalSpacing', 'verticalSpacingSlider');
     horizontalSpacing = updateLabelFromSlider('horizontalSpacing', 'horizontalSpacingSlider');
@@ -669,6 +687,8 @@ function parseParamsFromSliders() {
     refsHorizPadding = updateLabelFromSlider('refsHorizPadding', 'refsHorizPaddingSlider');
     refsVertAlignment = updateLabelFromSlider('refsVertAlignment', 'refsVertAlignmentSlider');
 
+    alignWithPixels = getBoolFromCheckbox('alignWithPixelsCheckbox');
+    
     updateTextVerticalMargins(textVertMargins);
     updateFontSizes();
 
@@ -688,6 +708,8 @@ function parseParamsFromSliders() {
     updateUrlParamFromSlider(urlParams, 'rvp', 'refsVertPaddingSlider');
     updateUrlParamFromSlider(urlParams, 'rhp', 'refsHorizPaddingSlider');
     updateUrlParamFromSlider(urlParams, 'rva', 'refsVertAlignmentSlider');
+
+    updateUrlParamFromCheckbox(urlParams, 'awp', 'alignWithPixelsCheckbox');
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
@@ -719,6 +741,8 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'rvp', 'refsVertPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'rhp', 'refsHorizPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'rva', 'refsVertAlignmentSlider');
+
+    updateCheckboxFromUrlParam(urlParams, 'awp', 'alignWithPixelsCheckbox');
 }
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
@@ -727,8 +751,18 @@ function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
     }
 }
 
+function updateCheckboxFromUrlParam(urlParams, paramName, elementName) {
+    if (urlParams.has(paramName)) {
+        document.getElementById(elementName).checked = urlParams.get(paramName) == 'true';
+    }
+}
+
 function updateUrlParamFromSlider(urlParams, paramName, sliderName) {
     urlParams.append(paramName, document.getElementById(sliderName).value);
+}
+
+function updateUrlParamFromCheckbox(urlParams, paramName, elementName) {
+    urlParams.append(paramName, document.getElementById(elementName).checked);
 }
 
 const checkZoomLevel = () => {
@@ -754,6 +788,8 @@ const checkZoomLevel = () => {
         warning.classList.remove("d-none");
         warning.innerHTML = `Warning! Browser zoom is set to ${currentZoom}%, output PNG files will also be scaled`;
     }
+
+    redraw();
 };
 
 function init() {
@@ -778,6 +814,7 @@ function init() {
     document.getElementById("refsVertPaddingSlider").oninput = parseParamsFromSliders;
     document.getElementById("refsHorizPaddingSlider").oninput = parseParamsFromSliders;
     document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromSliders;
+    document.getElementById("alignWithPixelsCheckbox").oninput = parseParamsFromSliders;
 
     parseParamsFromSliders();
     onInputDataChangedWithDelay();
