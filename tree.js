@@ -21,6 +21,7 @@ let majorFontSize = 0;
 let minorFontSize = 0;
 let refsVertPadding = 0;
 let refsHorizPadding = 0;
+let refsVertAlignment = 0;
 
 
 /**** Saving current tree as PNG ****/ 
@@ -282,8 +283,8 @@ function addSvgBorder(element) {
     element.style.top = (parseInt(element.style.top) || 0) + lineThickness - textVertMargins + refsVertPadding + 'px';
 
     let box = element.getBoundingClientRect();
-    let top = 1+ box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = 1+ box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
+    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
     let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
     let right = box.right - treeContainerBox.left + refsHorizPadding + lineThickness/2;
 
@@ -306,8 +307,8 @@ function addSvgArrowRight(element) {
     element.style.top = (parseInt(element.style.top) || 0) + lineThickness - textVertMargins + refsVertPadding + 'px';
 
     box = element.getBoundingClientRect();
-    let top = 1+ box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = 1+ box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
+    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
     let vertCenter = (top + bottom) / 2;
 
     let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
@@ -334,8 +335,8 @@ function addSvgArrowLeft(element) {
     element.style.top = (parseInt(element.style.top) || 0) + lineThickness  + 'px';
 
     box = element.getBoundingClientRect();
-    let top = 1+ box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = 1+ box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
+    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
     let vertCenter = (top + bottom) / 2;
 
     let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
@@ -666,6 +667,7 @@ function parseParamsFromSliders() {
 
     refsVertPadding = updateLabelFromSlider('refsVertPadding', 'refsVertPaddingSlider');
     refsHorizPadding = updateLabelFromSlider('refsHorizPadding', 'refsHorizPaddingSlider');
+    refsVertAlignment = updateLabelFromSlider('refsVertAlignment', 'refsVertAlignmentSlider');
 
     updateTextVerticalMargins(textVertMargins);
     updateFontSizes();
@@ -685,6 +687,7 @@ function parseParamsFromSliders() {
     updateUrlParamFromSlider(urlParams, 'sfs', 'minorFontSizeSlider');
     updateUrlParamFromSlider(urlParams, 'rvp', 'refsVertPaddingSlider');
     updateUrlParamFromSlider(urlParams, 'rhp', 'refsHorizPaddingSlider');
+    updateUrlParamFromSlider(urlParams, 'rva', 'refsVertAlignmentSlider');
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
@@ -715,6 +718,7 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'sfs', 'minorFontSizeSlider');
     updateSliderFromUrlParam(urlParams, 'rvp', 'refsVertPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'rhp', 'refsHorizPaddingSlider');
+    updateSliderFromUrlParam(urlParams, 'rva', 'refsVertAlignmentSlider');
 }
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
@@ -773,6 +777,7 @@ function init() {
     document.getElementById("minorFontSizeSlider").oninput = parseParamsFromSliders;
     document.getElementById("refsVertPaddingSlider").oninput = parseParamsFromSliders;
     document.getElementById("refsHorizPaddingSlider").oninput = parseParamsFromSliders;
+    document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromSliders;
 
     parseParamsFromSliders();
     onInputDataChangedWithDelay();
