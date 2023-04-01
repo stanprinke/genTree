@@ -23,6 +23,7 @@ let minorFontSize = 0;
 let refsVertPadding = 0;
 let refsHorizPadding = 0;
 let refsVertAlignment = 0;
+let alignRefsHorizontally = 0;
 
 
 /**** Saving current tree as PNG ****/ 
@@ -268,7 +269,7 @@ function updateFontSizes() {
 function addTreeLabel(label, x, y) {
     if (!label)
         return;
-    
+
     let paragraph = addTextLine(treeContainer, label, 'ref-big');
     paragraph.style.position = 'absolute';
     paragraph.style.zIndex = '40';
@@ -284,10 +285,10 @@ function addSvgBorder(element) {
     element.style.top = (parseInt(element.style.top) || 0) + lineThickness - textVertMargins + refsVertPadding + 'px';
 
     let box = element.getBoundingClientRect();
-    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
-    let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
-    let right = box.right - treeContainerBox.left + refsHorizPadding + lineThickness/2;
+    let top = refsVertAlignment  - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.height + refsVertPadding + lineThickness/2;
+    let left = -refsHorizPadding - lineThickness/2
+    let right = box.width + refsHorizPadding + lineThickness/2;
 
     drawPoly([
         [left + 1, top],
@@ -296,52 +297,59 @@ function addSvgBorder(element) {
         [left, bottom],
         [left, top],
         [left + 1, top]
-    ]);
+    ],
+    element);
 }
 
-function addSvgArrowRight(element) {
+function addSvgArrowRight(element, adjustHorizPos = true, adjustVertPos = true) {
     let box = element.getBoundingClientRect();
     let arrowSize = (box.height + refsVertPadding*2 + lineThickness) / 2;
 
     // move the element to make room for the arrow
-    element.style.left = (parseInt(element.style.left) || 0) + lineThickness + refsHorizPadding + arrowSize +'px';
-    element.style.top = (parseInt(element.style.top) || 0) + lineThickness - textVertMargins + refsVertPadding + 'px';
+    if (adjustHorizPos)
+        element.style.left = (parseInt(element.style.left) || 0) + lineThickness + refsHorizPadding + arrowSize +'px';
+    if (adjustVertPos)
+        element.style.top = (parseInt(element.style.top) || 0) + lineThickness + 'px';
 
     box = element.getBoundingClientRect();
-    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
+    let top = refsVertAlignment - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.height + refsVertPadding + lineThickness/2;
     let vertCenter = (top + bottom) / 2;
 
-    let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
-    let right = box.right - treeContainerBox.left + refsHorizPadding + lineThickness/2;
+    let left = -refsHorizPadding - lineThickness/2
+    let right = box.width + refsHorizPadding + lineThickness/2;
 
-    drawPoly([
-        [left, top],
-        [right, top],
-        [right + arrowSize, vertCenter],
-        [right, bottom],
-        [left - arrowSize, bottom],
-        [left, vertCenter],
-        [left - arrowSize, top],
-        [left, top]
-    ]);
+    drawPoly(
+        [
+            [left, top],
+            [right, top],
+            [right + arrowSize, vertCenter],
+            [right, bottom],
+            [left - arrowSize, bottom],
+            [left, vertCenter],
+            [left - arrowSize, top],
+            [left, top]
+        ],
+        element);
 }
 
-function addSvgArrowLeft(element) {
+function addSvgArrowLeft(element, adjustHorizPos = true, adjustVertPos = true) {
     let box = element.getBoundingClientRect();
     let arrowSize = (box.height + refsVertPadding*2 + lineThickness) / 2;
 
     // move the element to make room for the arrow
-    element.style.left = (parseInt(element.style.left) || 0) + lineThickness + refsHorizPadding + arrowSize +'px';
-    element.style.top = (parseInt(element.style.top) || 0) + lineThickness  + 'px';
+    if (adjustHorizPos)
+        element.style.left = (parseInt(element.style.left) || 0) + lineThickness + refsHorizPadding + arrowSize +'px';
+    if (adjustVertPos)
+        element.style.top = (parseInt(element.style.top) || 0) + lineThickness  + 'px';
 
     box = element.getBoundingClientRect();
-    let top = refsVertAlignment + box.top - treeContainerBox.top - refsVertPadding - lineThickness/2;
-    let bottom = refsVertAlignment + box.bottom - treeContainerBox.top + refsVertPadding + lineThickness/2;
+    let top = refsVertAlignment - refsVertPadding - lineThickness/2;
+    let bottom = refsVertAlignment + box.height + refsVertPadding + lineThickness/2;
     let vertCenter = (top + bottom) / 2;
 
-    let left = box.left - treeContainerBox.left - refsHorizPadding - lineThickness/2
-    let right = box.right - treeContainerBox.left + refsHorizPadding + lineThickness/2;
+    let left = -refsHorizPadding - lineThickness/2
+    let right = box.width + refsHorizPadding + lineThickness/2;
 
     drawPoly([
         [right, top],
@@ -353,7 +361,8 @@ function addSvgArrowLeft(element) {
         [left, top],
         [left, top],
         [right, top]
-    ]);
+    ],
+    element);
 }
 
 function addNodeAt(x, y, node) {
@@ -398,22 +407,31 @@ function addNodeAt(x, y, node) {
         addSvgArrowLeft(paragraph);
     }
 
-    if (node.fwd_ref) {
-        let paragraph = addTextLine(treeContainer, node.fwd_ref, 'ref-small');
-        paragraph.style.position = 'absolute'; 
+    if (node.side_ref) {
+        let paragraph = addTextLine(nodeDiv, node.side_ref, 'ref-small');
+        paragraph.style.position = 'relative';
         paragraph.style.zIndex = '40';
-        paragraph.style.whiteSpace = 'nowrap'
-        paragraph.style.top = node.outputAnchorY + lineThickness + 'px';
-
-        let left = node.outputAnchorX;
-        let secondLine = nodeDiv.children[1];
-        if (secondLine) {
-            let secondLineBox = secondLine.getBoundingClientRect();
-            left = Math.max(left, secondLineBox.right - treeContainerBox.left + connectionsMargin);
-        }
-        paragraph.style.left = left + 'px';
+        paragraph.style.top = 1+ refsVertPadding - textVertMargins/2 + 'px';
     
         addSvgArrowRight(paragraph);
+    }
+
+    if (node.fwd_ref) {
+        // add span to first line
+        let paragraph = addTextLineAsSpan(nodeDiv.firstChild, node.fwd_ref, 'ref-small');
+        paragraph.style.position = 'relative'; 
+        paragraph.style.verticalAlign = 'baseline'; 
+        paragraph.style.zIndex = '40';
+        paragraph.style.whiteSpace = 'nowrap'
+
+        // poor-man's vertical centering:
+        paragraph.style.top = Math.round((minorFontSize - majorFontSize)/2) + 'px';
+
+        if (node.isLastGen)
+            paragraph.classList.add("alignMeHorizontally");
+
+        paragraph.style.left = 10 + connectionsMargin + 'px';
+        addSvgArrowRight(paragraph, true, false);
     }
 }
 
@@ -424,11 +442,23 @@ function addTextLines(parentDiv, lines, cssClass) {
 }
 
 function addTextLine(parentDiv, line, cssClass) {
-    let paragraph = document.createElement('p');
-    paragraph.classList.add(cssClass);
-    paragraph.innerText = line;
-    parentDiv.appendChild(paragraph);
-    return paragraph;
+    if (line) {
+        let paragraph = document.createElement('p');
+        paragraph.classList.add(cssClass);
+        paragraph.innerText = line;
+        parentDiv.appendChild(paragraph);
+        return paragraph;
+    }
+}
+
+function addTextLineAsSpan(parentDiv, line, cssClass) {
+    if (line) {
+        let paragraph = document.createElement('span');
+        paragraph.classList.add(cssClass);
+        paragraph.innerText = line;
+        parentDiv.appendChild(paragraph);
+        return paragraph;
+    }
 }
 
 function drawStandardConnection(node1, node2) {
@@ -437,18 +467,19 @@ function drawStandardConnection(node1, node2) {
         drawPoly([
             // special case for empty nodes, to make all connecting lines gapless
             [node1.isEmptyNode ? (node1.outputAnchorX - 2*connectionsMargin) : node1.outputAnchorX, node1.outputAnchorY],
-            [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
-            [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
-            [node2.inputAnchorX, node2.inputAnchorY]
-        ]);
-    } else {
-        // exclude horizontal line, so it doesn't get drawn twice (slightly thicker)
-        drawPoly([
-            [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
-            [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
-            [node2.inputAnchorX, node2.inputAnchorY]
-        ]);
+            [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY]
+        ],
+        treeContainer,
+        'treeBranch');
     }
+
+    drawPoly([
+        [node2.inputAnchorX - connectionInletWidth, node1.outputAnchorY],
+        [node2.inputAnchorX - connectionInletWidth, node2.inputAnchorY],
+        [node2.inputAnchorX, node2.inputAnchorY]
+    ],
+    treeContainer,
+    'treeBranch');
 }
 
 function drawCompactedConnection(node1, node2) {
@@ -465,7 +496,9 @@ function drawCompactedConnection(node1, node2) {
             drawPoly([
                 [node1.outputAnchorX - 2*connectionsMargin, node1.outputAnchorY],
                 [node1.topAnchorX, node1.outputAnchorY]
-            ]);
+            ],
+            treeContainer,
+            'treeBranch');
         }
     } else {
         startX = node1.bottomAnchorX;
@@ -475,10 +508,32 @@ function drawCompactedConnection(node1, node2) {
         [startX, startY],
         [startX, node2.inputAnchorY],
         [node2.inputAnchorX, node2.inputAnchorY]
-    ]);
+    ],
+    treeContainer,
+    'treeBranch');
 }
 
-function drawPoly(pointsArray) {
+function drawPoly(pointsArray, parentElem, optionalClassToAdd) {
+    let minX = 9999;
+    let minY = 9999;
+    let maxX = -9999;
+    let maxY = -9999;
+
+    pointsArray.forEach(function(element) {
+        minX = Math.min(minX, element[0]);
+        maxX = Math.max(maxX, element[0]);
+        minY = Math.min(minY, element[1]);
+        maxY = Math.max(maxY, element[1]);
+    });
+
+    let adjustX = Math.floor(minX) - 10;
+    let adjustY = Math.floor(minY) - 10;
+
+    pointsArray.forEach(function(element) {
+        element[0] -= adjustX;
+        element[1] -= adjustY;
+    });
+
     if (alignWithPixels) {
         if (lineThickness % 2 == 1) {
             pointsArray.forEach(function(element) {
@@ -492,12 +547,18 @@ function drawPoly(pointsArray) {
             });
         }
     }
-    let draw = SVG().addTo('#treeContainer').size(treeContainer.clientWidth, treeContainer.clientHeight);
+
+    let draw = SVG().addTo(parentElem ? parentElem : treeContainer).size(Math.round(maxX - minX) + 20, Math.round(maxY - minY) + 20);
     draw.css('position', 'absolute')
+    draw.css('left', adjustX + 'px')
+    draw.css('top', adjustY + 'px')
     draw.css('z-index', '20')
     let polyline = draw.polyline(pointsArray);
     polyline.fill('none');
     polyline.stroke({ color: '#000', width: lineThickness, linecap: 'butt', linejoin: 'round' })
+    if (optionalClassToAdd) {
+        polyline.node.classList.add(optionalClassToAdd);
+    }
 }
 
 function redraw() {
@@ -561,6 +622,7 @@ function redrawImpl() {
         let genSize = Math.pow(2, generation);
         let positionInGen = i - genSize + 1;
         let node = nodesArray[i];
+        node.isLastGen = generation == maxGeneration;
         let x = horizontalSpacing * (Math.max(0, generation - numberOfCompactedGenerations))
             + (compactedHorizontalSpacing + connectionInletWidth + connectionsMargin) * Math.min(generation, numberOfCompactedGenerations); 
         let y = getPositionY(generation, positionInGen, maxGeneration);
@@ -591,19 +653,15 @@ function redrawImpl() {
 
     addTreeLabel(treeData.ref_label, 4, 4);
 
-    adjustTreeContainerSize();
+    if (alignRefsHorizontally)
+        alignLastGenRefs();
 
-    for (let element of treeContainer.children) {
-        if (element.tagName.toLowerCase() == 'svg') {
-            element.style.width = treeContainer.style.width;
-            element.style.height = parseInt(treeContainer.style.height) + minVerticalPos + "px";
-        }
-    }
+    adjustTreeContainerSize();
 }
 
 function adjustTreeContainerSize() {
-    let maxRight = 0;
-    let maxBottom = 0;
+    let maxRight = -9999;
+    let maxBottom = -9999;
 
     treeContainerBox = treeContainer.getBoundingClientRect();
 
@@ -618,6 +676,43 @@ function adjustTreeContainerSize() {
 
     treeContainer.style.width = maxRight + 2 + 'px';
     treeContainer.style.height = maxBottom + 4 + 'px';
+    treeContainerBox = treeContainer.getBoundingClientRect();
+
+    // in case there's no text on the bottom nodes, make it symmetrical vertically
+    // + make the last gen width the same as any other standard gen (not compacted)
+    let minTop = 9999;
+    maxRight = -9999;
+    maxBottom = -9999;
+
+    for (let element of treeContainer.getElementsByClassName("treeBranch")) {
+        let boundingBox = element.getBoundingClientRect();
+        maxRight = Math.max(maxRight, boundingBox.right - treeContainerBox.left);
+        maxBottom = Math.max(maxBottom, boundingBox.bottom - treeContainerBox.top);
+        minTop = Math.min(minTop, boundingBox.top - treeContainerBox.top)
+    }
+
+    let newWidth = maxRight + horizontalSpacing - connectionInletWidth;
+    if (newWidth > parseInt(treeContainer.style.width))
+        treeContainer.style.width = newWidth + 'px';
+
+    let newHeight = maxBottom + minTop;
+    if (newHeight > parseInt(treeContainer.style.height))
+        treeContainer.style.height = newHeight + 'px';
+}
+
+function alignLastGenRefs() {
+    let maxLeft = 0;
+    for (let element of treeContainer.getElementsByClassName("alignMeHorizontally")) {
+        let box = element.getBoundingClientRect();
+        maxLeft = Math.max(maxLeft, box.left);
+    }
+
+    for (let element of treeContainer.getElementsByClassName("alignMeHorizontally")) {
+        let box = element.getBoundingClientRect();
+        let moveBy = maxLeft - box.left;
+        if (moveBy > 0)
+            element.style.left = moveBy + parseInt(element.style.left) + 'px';
+    }
 }
 
 function onInputDataChangedWithDelay() {
@@ -637,9 +732,9 @@ function defaultInputData() {
             {"back_ref":"#456", "linesA":["1 line A line A line A"], "linesC":["line C"], "linesD":["line D", "line D 2", "line D 3"]},
             {},
             {"linesB":["3 line B line B line B"], "linesC":["line C"], "linesD":["line D"]},
-            {"fwd_ref":"4324", "linesA":["4 line A"], "linesC":["line C line C line C"], "linesD":["line D", "line D 2", "line D 3"]},
+            {"side_ref":"4324:12", "linesA":["4 line A"], "linesC":["line C line C line C"], "linesD":["line D", "line D 2", "line D 3"]},
             {},
-            {"fwd_ref":"345 345 3245", "linesA":["6 line A"], "linesC":["line C"], "linesD":["line D"]},
+            {"side_ref":"345:3", "linesA":["6 line A"]},
             {"linesB":["7 line B"], "linesC":["line C"], "linesD":["line D"]},
             {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D"]},
             {"fwd_ref":"456", "linesB":["9 line B"], "linesC":["line C"], "linesD":["line D"]},
@@ -688,6 +783,7 @@ function parseParamsFromSliders() {
     refsVertAlignment = updateLabelFromSlider('refsVertAlignment', 'refsVertAlignmentSlider');
 
     alignWithPixels = getBoolFromCheckbox('alignWithPixelsCheckbox');
+    alignRefsHorizontally = getBoolFromCheckbox('alignRefsHorizontallyCheckbox');
     
     updateTextVerticalMargins(textVertMargins);
     updateFontSizes();
@@ -710,6 +806,7 @@ function parseParamsFromSliders() {
     updateUrlParamFromSlider(urlParams, 'rva', 'refsVertAlignmentSlider');
 
     updateUrlParamFromCheckbox(urlParams, 'awp', 'alignWithPixelsCheckbox');
+    updateUrlParamFromCheckbox(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
@@ -743,6 +840,7 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'rva', 'refsVertAlignmentSlider');
 
     updateCheckboxFromUrlParam(urlParams, 'awp', 'alignWithPixelsCheckbox');
+    updateCheckboxFromUrlParam(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
 }
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
@@ -815,6 +913,7 @@ function init() {
     document.getElementById("refsHorizPaddingSlider").oninput = parseParamsFromSliders;
     document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromSliders;
     document.getElementById("alignWithPixelsCheckbox").oninput = parseParamsFromSliders;
+    document.getElementById("alignRefsHorizontallyCheckbox").oninput = parseParamsFromSliders;
 
     parseParamsFromSliders();
     onInputDataChangedWithDelay();
