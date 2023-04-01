@@ -23,6 +23,7 @@ let minorFontSize = 0;
 let refsVertPadding = 0;
 let refsHorizPadding = 0;
 let refsVertAlignment = 0;
+let fwdRefsVertOffset = 0;
 let alignRefsHorizontally = 0;
 
 let fonts = ["--browser default--", "Segoe UI", "Arial", "Roboto", "Open Sans", "Lato", "Alegreya Sans", "Archivo Narrow", "Calibri", "Cambria", "Comfortaa", "DM Sans",
@@ -426,21 +427,21 @@ function addNodeAt(x, y, node) {
     }
 
     if (node.fwd_ref) {
-        // add span to first line
-        let paragraph = addTextLineAsSpan(nodeDiv.firstChild, node.fwd_ref, 'ref-small');
-        paragraph.style.position = 'relative'; 
-        paragraph.style.verticalAlign = 'baseline'; 
+        let paragraph = addTextLine(nodeDiv.firstChild, node.fwd_ref, 'ref-small');
+        paragraph.style.position = 'absolute'; 
         paragraph.style.zIndex = '40';
         paragraph.style.whiteSpace = 'nowrap'
 
+        let parBox = paragraph.getBoundingClientRect();
+        
         // poor-man's vertical centering:
-        paragraph.style.top = Math.round((minorFontSize - majorFontSize)/2) + 'px';
+        paragraph.style.top = Math.round((firstLabelBox.height - parBox.height)/2) + fwdRefsVertOffset + 'px';
+
+        paragraph.style.left = 10 + firstLabelBox.width + connectionsMargin + 'px';
+        addSvgArrowRight(paragraph, true, false);
 
         if (node.isLastGen)
             paragraph.classList.add("alignMeHorizontally");
-
-        paragraph.style.left = 10 + connectionsMargin + 'px';
-        addSvgArrowRight(paragraph, true, false);
     }
 }
 
@@ -453,16 +454,6 @@ function addTextLines(parentDiv, lines, cssClass) {
 function addTextLine(parentDiv, line, cssClass) {
     if (line) {
         let paragraph = document.createElement('p');
-        paragraph.classList.add(cssClass);
-        paragraph.innerText = line;
-        parentDiv.appendChild(paragraph);
-        return paragraph;
-    }
-}
-
-function addTextLineAsSpan(parentDiv, line, cssClass) {
-    if (line) {
-        let paragraph = document.createElement('span');
         paragraph.classList.add(cssClass);
         paragraph.innerText = line;
         parentDiv.appendChild(paragraph);
@@ -773,7 +764,7 @@ function getBoolFromCheckbox(elementName) {
     return document.getElementById(elementName).checked;
 }
 
-function parseParamsFromSliders() {
+function parseParamsFromInputElements() {
     verticalSpacing = updateLabelFromSlider('verticalSpacing', 'verticalSpacingSlider');
     horizontalSpacing = updateLabelFromSlider('horizontalSpacing', 'horizontalSpacingSlider');
     compactedHorizontalSpacing = updateLabelFromSlider('compactedHorizontalSpacing', 'compactedHorizontalSpacingSlider');
@@ -790,6 +781,7 @@ function parseParamsFromSliders() {
     refsVertPadding = updateLabelFromSlider('refsVertPadding', 'refsVertPaddingSlider');
     refsHorizPadding = updateLabelFromSlider('refsHorizPadding', 'refsHorizPaddingSlider');
     refsVertAlignment = updateLabelFromSlider('refsVertAlignment', 'refsVertAlignmentSlider');
+    fwdRefsVertOffset = updateLabelFromSlider('fwdRefsVertOffset', 'fwdRefsVertOffsetSlider');
 
     alignWithPixels = getBoolFromCheckbox('alignWithPixelsCheckbox');
     alignRefsHorizontally = getBoolFromCheckbox('alignRefsHorizontallyCheckbox');
@@ -798,24 +790,27 @@ function parseParamsFromSliders() {
     updateFontSizes();
 
     let urlParams = new URLSearchParams();
-    updateUrlParamFromSlider(urlParams, 'vs', 'verticalSpacingSlider');
-    updateUrlParamFromSlider(urlParams, 'hs', 'horizontalSpacingSlider');
-    updateUrlParamFromSlider(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
-    updateUrlParamFromSlider(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
+    updateUrlParamFromElement(urlParams, 'vs', 'verticalSpacingSlider');
+    updateUrlParamFromElement(urlParams, 'hs', 'horizontalSpacingSlider');
+    updateUrlParamFromElement(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
+    updateUrlParamFromElement(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
 
-    updateUrlParamFromSlider(urlParams, 'tm', 'textVertMarginsSlider');
-    updateUrlParamFromSlider(urlParams, 'iw', 'connectionInletWidthSlider');
-    updateUrlParamFromSlider(urlParams, 'lm', 'connectionsMarginSlider');
-    updateUrlParamFromSlider(urlParams, 'lt', 'lineThicknessSlider');
+    updateUrlParamFromElement(urlParams, 'tm', 'textVertMarginsSlider');
+    updateUrlParamFromElement(urlParams, 'iw', 'connectionInletWidthSlider');
+    updateUrlParamFromElement(urlParams, 'lm', 'connectionsMarginSlider');
+    updateUrlParamFromElement(urlParams, 'lt', 'lineThicknessSlider');
     
-    updateUrlParamFromSlider(urlParams, 'bfs', 'majorFontSizeSlider');
-    updateUrlParamFromSlider(urlParams, 'sfs', 'minorFontSizeSlider');
-    updateUrlParamFromSlider(urlParams, 'rvp', 'refsVertPaddingSlider');
-    updateUrlParamFromSlider(urlParams, 'rhp', 'refsHorizPaddingSlider');
-    updateUrlParamFromSlider(urlParams, 'rva', 'refsVertAlignmentSlider');
+    updateUrlParamFromElement(urlParams, 'bfs', 'majorFontSizeSlider');
+    updateUrlParamFromElement(urlParams, 'sfs', 'minorFontSizeSlider');
+    updateUrlParamFromElement(urlParams, 'rvp', 'refsVertPaddingSlider');
+    updateUrlParamFromElement(urlParams, 'rhp', 'refsHorizPaddingSlider');
+    updateUrlParamFromElement(urlParams, 'rva', 'refsVertAlignmentSlider');
+    updateUrlParamFromElement(urlParams, 'fro', 'fwdRefsVertOffsetSlider');
 
     updateUrlParamFromCheckbox(urlParams, 'awp', 'alignWithPixelsCheckbox');
     updateUrlParamFromCheckbox(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
+
+    updateUrlParamFromElement(urlParams, 'font', 'fontSelect');
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
@@ -825,7 +820,7 @@ function parseParamsFromSliders() {
 function clearInputParams() {
     window.location = window.location.href.split('?')[0];
     parseUrlParams();
-    parseParamsFromSliders();
+    parseParamsFromInputElements();
     redraw();
 }
 
@@ -847,9 +842,12 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'rvp', 'refsVertPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'rhp', 'refsHorizPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'rva', 'refsVertAlignmentSlider');
+    updateSliderFromUrlParam(urlParams, 'fro', 'fwdRefsVertOffsetSlider');
 
     updateCheckboxFromUrlParam(urlParams, 'awp', 'alignWithPixelsCheckbox');
     updateCheckboxFromUrlParam(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
+
+    updateComboFromUrlParam(urlParams, 'font', 'fontSelect');
 }
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
@@ -864,8 +862,15 @@ function updateCheckboxFromUrlParam(urlParams, paramName, elementName) {
     }
 }
 
-function updateUrlParamFromSlider(urlParams, paramName, sliderName) {
-    urlParams.append(paramName, document.getElementById(sliderName).value);
+function updateComboFromUrlParam(urlParams, paramName, elementName) {
+    if (urlParams.has(paramName)) {
+        document.getElementById(elementName).value = urlParams.get(paramName);
+    }
+}
+
+function updateUrlParamFromElement(urlParams, paramName, elementName) {
+    let elem = document.getElementById(elementName);
+    urlParams.append(paramName, elem.value);
 }
 
 function updateUrlParamFromCheckbox(urlParams, paramName, elementName) {
@@ -881,6 +886,7 @@ function fontSelected() {
         existingStyle.remove();
 	document.body.insertAdjacentHTML("beforeend",
         "<style id='dynamicStyle'> #treeContainer { font-family:'"+options[selectedIndex].text+"';} </style>");
+    parseParamsFromInputElements();
     redraw();
 }
 
@@ -918,25 +924,27 @@ function init() {
 
     document.getElementById("treeInputData").oninput = onInputDataChangedWithDelay;
 
-    document.getElementById("verticalSpacingSlider").oninput = parseParamsFromSliders;
-    document.getElementById("horizontalSpacingSlider").oninput = parseParamsFromSliders;
-    document.getElementById("compactedHorizontalSpacingSlider").oninput = parseParamsFromSliders;
-    document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseParamsFromSliders;
+    document.getElementById("verticalSpacingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("horizontalSpacingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("compactedHorizontalSpacingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseParamsFromInputElements;
 
-    document.getElementById("textVertMarginsSlider").oninput = parseParamsFromSliders;
-    document.getElementById("connectionInletWidthSlider").oninput = parseParamsFromSliders;
-    document.getElementById("connectionsMarginSlider").oninput = parseParamsFromSliders;
-    document.getElementById("lineThicknessSlider").oninput = parseParamsFromSliders;
+    document.getElementById("textVertMarginsSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("connectionInletWidthSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("connectionsMarginSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("lineThicknessSlider").oninput = parseParamsFromInputElements;
 
-    document.getElementById("majorFontSizeSlider").oninput = parseParamsFromSliders;
-    document.getElementById("minorFontSizeSlider").oninput = parseParamsFromSliders;
-    document.getElementById("refsVertPaddingSlider").oninput = parseParamsFromSliders;
-    document.getElementById("refsHorizPaddingSlider").oninput = parseParamsFromSliders;
-    document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromSliders;
-    document.getElementById("alignWithPixelsCheckbox").oninput = parseParamsFromSliders;
-    document.getElementById("alignRefsHorizontallyCheckbox").oninput = parseParamsFromSliders;
+    document.getElementById("majorFontSizeSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("minorFontSizeSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("refsVertPaddingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("refsHorizPaddingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("fwdRefsVertOffsetSlider").oninput = parseParamsFromInputElements;
 
-    parseParamsFromSliders();
+    document.getElementById("alignWithPixelsCheckbox").oninput = parseParamsFromInputElements;
+    document.getElementById("alignRefsHorizontallyCheckbox").oninput = parseParamsFromInputElements;
+
+    parseParamsFromInputElements();
     onInputDataChangedWithDelay();
 
     let fontSelect = document.getElementById("fontSelect")
@@ -947,7 +955,7 @@ function init() {
         fontSelect.add(option);
     }
 
-    fontSelect.value = "Roboto";
+    fontSelect.value = "Helvetica";
     fontSelected();
 }
 

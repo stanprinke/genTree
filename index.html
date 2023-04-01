@@ -179,12 +179,16 @@
                         refs horizontal padding: <span id="refsHorizPadding"></span>
                     </div>
                     <div>
-                        <input type="range" value="0" step="1" min="-4" max="5" class="slider" id="refsVertAlignmentSlider">
+                        <input type="range" value="-1" step="1" min="-5" max="5" class="slider" id="refsVertAlignmentSlider">
                         refs vertical alignment: <span id="refsVertAlignment"></span>
+                    </div>
+                    <div>
+                        <input type="range" value="-1" step="1" min="-5" max="5" class="slider" id="fwdRefsVertOffsetSlider">
+                        fwd_refs vertical offset: <span id="fwdRefsVertOffset"></span>
                     </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="alignRefsHorizontallyCheckbox">
-                        <label class="form-check-label" for="alignRefsHorizontallyCheckbox">refs aligned horizontally</label>
+                        <label class="form-check-label" for="alignRefsHorizontallyCheckbox">fwd_refs aligned horizontally</label>
                     </div>
                 </div>
             </td>
