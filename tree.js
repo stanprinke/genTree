@@ -26,12 +26,13 @@ let refsVertAlignment = 0;
 let fwdRefsVertOffset = 0;
 let alignRefsHorizontally = 0;
 
-let fonts = ["--browser default--", "Segoe UI", "Arial", "Roboto", "Open Sans", "Lato", "Alegreya Sans", "Archivo Narrow", "Calibri", "Cambria", "Comfortaa", "DM Sans",
-    "Eczar", "Epilogue", "Exo", "Exo 2", "Fira Sans", "Georgia", "Helvetica", "Helvetica Neue",
-    "IBM Plex Sans", "Inter", "Istok Web", "Karla", "Libre Baskerville", "Libre Franklin",
+let fonts = [
+    "Fira Sans", "Inter", "Istok Web", "Open Sans", "Roboto", "Roboto Condensed", "Roboto Slab", "Ubuntu", "Verdana",
+    "--- browser default font ---",
+    "Arial", "Alegreya Sans", "Calibri", "Cambria", "Comfortaa", "DM Sans",
+    "Eczar", "Exo", "Georgia", "Helvetica", "IBM Plex Sans", "Karla", "Lato", "Libre Baskerville", "Libre Franklin",
     "Lora", "Manrope", "Merriweather", "Mina", "Montserrat", "Nobile", "Noto Sans", "Oswald",
-    "PT Sans", "PT Serif", "Playfair Display", "Poppins", "Proza Libre", "Raleway", "Roboto Condensed", "Roboto Slab",
-    "Source Sans Pro", "Space Grotesk", "Spectral", "Syne", "Ubuntu", "Verdana", "Work Sans"];
+    "PT Sans", "PT Serif", "Poppins", "Proza Libre", "Segoe UI", "Source Sans Pro", "Space Grotesk", "Work Sans"];
 
 /**** Saving current tree as PNG ****/ 
 
@@ -955,7 +956,7 @@ function init() {
         fontSelect.add(option);
     }
 
-    fontSelect.value = "Helvetica";
+    fontSelect.value = "Roboto";
     fontSelected();
 }
 
