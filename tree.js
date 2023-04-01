@@ -25,6 +25,12 @@ let refsHorizPadding = 0;
 let refsVertAlignment = 0;
 let alignRefsHorizontally = 0;
 
+let fonts = ["--browser default--", "Segoe UI", "Arial", "Roboto", "Open Sans", "Lato", "Alegreya Sans", "Archivo Narrow", "Calibri", "Cambria", "Comfortaa", "DM Sans",
+    "Eczar", "Epilogue", "Exo", "Exo 2", "Fira Sans", "Georgia", "Helvetica", "Helvetica Neue",
+    "IBM Plex Sans", "Inter", "Istok Web", "Karla", "Libre Baskerville", "Libre Franklin",
+    "Lora", "Manrope", "Merriweather", "Mina", "Montserrat", "Nobile", "Noto Sans", "Oswald",
+    "PT Sans", "PT Serif", "Playfair Display", "Poppins", "Proza Libre", "Raleway", "Roboto Condensed", "Roboto Slab",
+    "Source Sans Pro", "Space Grotesk", "Spectral", "Syne", "Ubuntu", "Verdana", "Work Sans"];
 
 /**** Saving current tree as PNG ****/ 
 
@@ -224,6 +230,9 @@ let alignRefsHorizontally = 0;
 /**** ****/
 
 function parseNodes(treeAsJson) {
+    if (!treeAsJson)
+        throw new Error("provided json was empty!");
+
     let result = JSON.parse(treeAsJson);
     if (!result?.items?.length)
         throw new Error("failed to parse input: " + treeAsJson);
@@ -863,6 +872,18 @@ function updateUrlParamFromCheckbox(urlParams, paramName, elementName) {
     urlParams.append(paramName, document.getElementById(elementName).checked);
 }
 
+function fontSelected() {
+    // based on: https://codepen.io/MetAteM/pen/WrdWYJ
+	let selectedIndex = document.getElementById("fontSelect").selectedIndex;
+    let options = document.getElementById("fontSelect").options;
+    let existingStyle = document.getElementById("dynamicStyle");
+    if (existingStyle)
+        existingStyle.remove();
+	document.body.insertAdjacentHTML("beforeend",
+        "<style id='dynamicStyle'> #treeContainer { font-family:'"+options[selectedIndex].text+"';} </style>");
+    redraw();
+}
+
 const checkZoomLevel = () => {
     if (removeZoomListener != null) {
         removeZoomListener();
@@ -891,8 +912,8 @@ const checkZoomLevel = () => {
 };
 
 function init() {
-    checkZoomLevel();
     populateInputTextArea();
+    checkZoomLevel();
     parseUrlParams();
 
     document.getElementById("treeInputData").oninput = onInputDataChangedWithDelay;
@@ -917,6 +938,17 @@ function init() {
 
     parseParamsFromSliders();
     onInputDataChangedWithDelay();
+
+    let fontSelect = document.getElementById("fontSelect")
+    for(const font of fonts){
+        let option = document.createElement('option');
+        option.value = option.innerHTML = font;
+        option.style.fontFamily = font;
+        fontSelect.add(option);
+    }
+
+    fontSelect.value = "Roboto";
+    fontSelected();
 }
 
 init();

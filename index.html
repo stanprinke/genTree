@@ -14,6 +14,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link href='https://fonts.googleapis.com/css?family=Alegreya+Sans|Archivo+Narrow|Calibri|Cambria|Comfortaa|DM+Sans|Eczar|Epilogue|Exo|Exo+2|Fira+Sans|Georgia|Helvetica|Helvetica+Neue|IBM+Plex+Sans|Inter|Istok+Web|Karla|Lato|Libre+Baskerville|Libre+Franklin|Lora|Manrope|Merriweather|Mina|Montserrat|Nobile|Noto+Sans|Open+Sans|Oswald|PT+Sans|PT+Serif|Playfair+Display|Poppins|Proza+Libre|Raleway|Roboto|Roboto+Condensed|Roboto+Slab|Source+Sans+Pro|Space+Grotesk|Spectral|Syne|Ubuntu|Verdana|Work+Sans' rel='stylesheet' type='text/css'>
+
     <style id="myStyle">
         body {
             background-color: #EEEEEE;
@@ -39,6 +41,10 @@
 
         #treeContainer p {
             margin: -5px 0;
+        }
+
+        #fontSelect {
+            font-size: 24px;
         }
 
         .foreground {
@@ -125,6 +131,9 @@
                         <input type="range" value="2" step="1" min="0" max="6" class="slider" id="numberOfCompactedGenerationsSlider">
                         # of compacted levels: <span id="numberOfCompactedGenerations"></span>
                     </div>
+                    <div>
+                        Font family: <select id="fontSelect" onChange="fontSelected()"></select>
+                    </div>
                 </div>
             </td>
             <td>
@@ -170,7 +179,7 @@
                         refs horizontal padding: <span id="refsHorizPadding"></span>
                     </div>
                     <div>
-                        <input type="range" value="1" step="1" min="-3" max="5" class="slider" id="refsVertAlignmentSlider">
+                        <input type="range" value="0" step="1" min="-4" max="5" class="slider" id="refsVertAlignmentSlider">
                         refs vertical alignment: <span id="refsVertAlignment"></span>
                     </div>
                     <div class="form-check form-switch">
