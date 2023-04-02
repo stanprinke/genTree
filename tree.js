@@ -8,6 +8,7 @@ const localStoreKey = "genTreeInputData";
 
 // editable with sliders:
 let verticalSpacing = 0;
+let verticalOffset = 0;
 let horizontalSpacing = 0;
 let compactedHorizontalSpacing = 0;
 let numberOfCompactedGenerations = 0;
@@ -638,14 +639,20 @@ function redrawImpl() {
     }
 
     for (let i = 0; i < nodesArray.length; i++) {
+        // zero-based:
         let generation = genForArrayIndex(i);
         let genSize = Math.pow(2, generation);
+        // zero-based:
         let positionInGen = i - genSize + 1;
         let node = nodesArray[i];
         node.isLastGen = generation == maxGeneration;
         let x = horizontalSpacing * (Math.max(0, generation - numberOfCompactedGenerations))
             + (compactedHorizontalSpacing + connectionInletWidth + connectionsMargin) * Math.min(generation, numberOfCompactedGenerations); 
         let y = getPositionY(generation, positionInGen, maxGeneration);
+        if (node.isLastGen) {
+            let isEven = positionInGen % 2 == 0;
+            y += isEven ? -verticalOffset : verticalOffset;
+        }
         addNodeAt(x, y, node);
     }
 
@@ -751,8 +758,8 @@ function defaultInputData() {
             {},
             {"side_ref":"345:3", "linesA":["6 line A"]},
             {"linesB":["7 line B"], "linesC":["line C"], "linesD":["line D"]},
-            {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D"]},
-            {"fwd_ref":"456", "linesB":["9 line B"], "linesC":["line C"], "linesD":["line D"]},
+            {"linesA":["8 line A"], "linesC":["line C"], "linesD":["line D", "line D line D"]},
+            {"fwd_ref":"456", "linesB":["9 line B"], "linesC":["line C"], "linesD":["line D line D"]},
             {"fwd_ref":"457", "linesA":["10 line A"], "linesC":["line C"], "linesD":["line D"]},
             {"fwd_ref":"458", "linesB":["11 line B"], "linesC":["line C line C line C"], "linesD":["line D"]}
         ]
@@ -781,6 +788,7 @@ function getBoolFromCheckbox(elementName) {
 
 function parseParamsFromInputElements() {
     verticalSpacing = updateLabelFromSlider('verticalSpacing', 'verticalSpacingSlider');
+    verticalOffset = updateLabelFromSlider('verticalOffset', 'verticalOffsetSlider');
     horizontalSpacing = updateLabelFromSlider('horizontalSpacing', 'horizontalSpacingSlider');
     compactedHorizontalSpacing = updateLabelFromSlider('compactedHorizontalSpacing', 'compactedHorizontalSpacingSlider');
     numberOfCompactedGenerations = updateLabelFromSlider('numberOfCompactedGenerations', 'numberOfCompactedGenerationsSlider');
@@ -806,6 +814,7 @@ function parseParamsFromInputElements() {
 
     let urlParams = new URLSearchParams();
     updateUrlParamFromElement(urlParams, 'vs', 'verticalSpacingSlider');
+    updateUrlParamFromElement(urlParams, 'vo', 'verticalOffsetSlider');
     updateUrlParamFromElement(urlParams, 'hs', 'horizontalSpacingSlider');
     updateUrlParamFromElement(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
     updateUrlParamFromElement(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
@@ -843,6 +852,7 @@ function parseUrlParams() {
     let urlParams = new URLSearchParams(window.location.search);
 
     updateSliderFromUrlParam(urlParams, 'vs', 'verticalSpacingSlider');
+    updateSliderFromUrlParam(urlParams, 'vo', 'verticalOffsetSlider');
     updateSliderFromUrlParam(urlParams, 'hs', 'horizontalSpacingSlider');
     updateSliderFromUrlParam(urlParams, 'cs', 'compactedHorizontalSpacingSlider');
     updateSliderFromUrlParam(urlParams, 'cl', 'numberOfCompactedGenerationsSlider');
@@ -940,6 +950,7 @@ function init() {
     document.getElementById("treeInputData").oninput = onInputDataChangedWithDelay;
 
     document.getElementById("verticalSpacingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("verticalOffsetSlider").oninput = parseParamsFromInputElements;
     document.getElementById("horizontalSpacingSlider").oninput = parseParamsFromInputElements;
     document.getElementById("compactedHorizontalSpacingSlider").oninput = parseParamsFromInputElements;
     document.getElementById("numberOfCompactedGenerationsSlider").oninput = parseParamsFromInputElements;
