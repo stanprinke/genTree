@@ -527,8 +527,9 @@ function drawPoly(pointsArray, parentElem, optionalClassToAdd) {
         maxY = Math.max(maxY, element[1]);
     });
 
-    let adjustX = Math.floor(minX) - 10;
-    let adjustY = Math.floor(minY) - 10;
+
+    let adjustX = Math.floor(minX) - Math.ceil(lineThickness/2);
+    let adjustY = Math.floor(minY) - Math.ceil(lineThickness/2);
 
     pointsArray.forEach(function(element) {
         element[0] -= adjustX;
@@ -549,7 +550,7 @@ function drawPoly(pointsArray, parentElem, optionalClassToAdd) {
         }
     }
 
-    let draw = SVG().addTo(parentElem ? parentElem : treeContainer).size(Math.round(maxX - minX) + 20, Math.round(maxY - minY) + 20);
+    let draw = SVG().addTo(parentElem ? parentElem : treeContainer).size(Math.round(maxX - minX) + lineThickness + 1, Math.round(maxY - minY) + lineThickness + 1);
     draw.css('position', 'absolute')
     draw.css('left', adjustX + 'px')
     draw.css('top', adjustY + 'px')
@@ -579,10 +580,30 @@ function getPositionY(generation, positionInGen, maxGeneration) {
     return (positionInGen * 2 + 1) * partHeight;
 }
 
-function moveByOffset(elements, x, y) {
-    for(let element of elements) {
-        element.style.left = (parseInt(element.style.left) || 0) + x + 'px';
-        element.style.top = (parseInt(element.style.top) || 0) + y + 'px';
+function adjustTopAndLeftMargin(margin) {
+    let minLeft = 9999;
+    let minTop = 9999;
+
+    treeContainerBox = treeContainer.getBoundingClientRect();
+    
+    for(let element of treeContainer.getElementsByTagName('*')) {
+        let box = element.getBoundingClientRect();
+        let left = box.left - treeContainerBox.left;
+        let top = box.top - treeContainerBox.top;
+        let tagName = element.tagName.toLowerCase();
+        if (tagName == 'svg' || tagName == 'polyline') {
+            left += 1;
+        }
+        minLeft = Math.min(minLeft, left);
+        minTop = Math.min(minTop, top);
+    }
+
+    minLeft -= margin;
+    minTop -= margin;
+
+    for(let element of treeContainer.children) {
+        element.style.left = (parseInt(element.style.left) || 0) - minLeft + 'px';
+        element.style.top = (parseInt(element.style.top) || 0) - minTop + 'px';
     }
 }
 
@@ -616,8 +637,6 @@ function redrawImpl() {
         nodesArray.push({});
     }
 
-    let minVerticalPos = 99999;
-
     for (let i = 0; i < nodesArray.length; i++) {
         let generation = genForArrayIndex(i);
         let genSize = Math.pow(2, generation);
@@ -627,7 +646,6 @@ function redrawImpl() {
         let x = horizontalSpacing * (Math.max(0, generation - numberOfCompactedGenerations))
             + (compactedHorizontalSpacing + connectionInletWidth + connectionsMargin) * Math.min(generation, numberOfCompactedGenerations); 
         let y = getPositionY(generation, positionInGen, maxGeneration);
-        minVerticalPos = Math.min(minVerticalPos, y);
         addNodeAt(x, y, node);
     }
 
@@ -646,11 +664,7 @@ function redrawImpl() {
         }
     }
 
-    if (textVertMargins < 0) {
-        minVerticalPos += textVertMargins;
-    }
-
-    moveByOffset(treeContainer.children, 2, -minVerticalPos);
+    adjustTopAndLeftMargin(2);
 
     addTreeLabel(treeData.ref_label, 4, 4);
 
