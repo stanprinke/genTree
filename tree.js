@@ -17,6 +17,8 @@ let textVertMargins = 0;
 let connectionInletWidth = 0;
 let connectionsMargin = 0;
 let lineThickness = 0;
+let globalPadding = 0;
+let enableOutline = false;
 let alignWithPixels = true;
 
 let majorFontSize = 0;
@@ -276,6 +278,12 @@ function updateFontSizes() {
 
     updateFontSize('.ref-big', majorFontSize);
     updateFontSize('.ref-small', minorFontSize);
+}
+
+function updateOutline() {
+    let myRule = getCSSRule('#treeContainer');
+    myRule.style.outlineWidth = (enableOutline ? lineThickness : 0) + "px";
+    myRule.style.outlineOffset = (enableOutline ? -lineThickness : 0) + "px";
 }
 
 function addTreeLabel(label, x, y) {
@@ -671,9 +679,8 @@ function redrawImpl() {
         }
     }
 
-    adjustTopAndLeftMargin(2);
-
-    addTreeLabel(treeData.ref_label, 4, 4);
+    adjustTopAndLeftMargin(globalPadding);
+    addTreeLabel(treeData.ref_label, globalPadding, globalPadding);
 
     if (alignRefsHorizontally)
         alignLastGenRefs();
@@ -696,8 +703,8 @@ function adjustTreeContainerSize() {
         }
     }
 
-    treeContainer.style.width = maxRight + 2 + 'px';
-    treeContainer.style.height = maxBottom + 4 + 'px';
+    treeContainer.style.width = maxRight + globalPadding + 'px';
+    treeContainer.style.height = maxBottom + globalPadding + 'px';
     treeContainerBox = treeContainer.getBoundingClientRect();
 
     // in case there's no text on the bottom nodes, make it symmetrical vertically
@@ -713,7 +720,7 @@ function adjustTreeContainerSize() {
         minTop = Math.min(minTop, boundingBox.top - treeContainerBox.top)
     }
 
-    let newWidth = maxRight + horizontalSpacing - connectionInletWidth;
+    let newWidth = maxRight + horizontalSpacing - connectionInletWidth + globalPadding;
     if (newWidth > parseInt(treeContainer.style.width))
         treeContainer.style.width = newWidth + 'px';
 
@@ -797,6 +804,7 @@ function parseParamsFromInputElements() {
     connectionInletWidth = updateLabelFromSlider('connectionInletWidth', 'connectionInletWidthSlider');
     connectionsMargin = updateLabelFromSlider('connectionsMargin', 'connectionsMarginSlider');
     lineThickness = updateLabelFromSlider('lineThickness', 'lineThicknessSlider');
+    globalPadding = updateLabelFromSlider('globalPadding', 'globalPaddingSlider');
 
     majorFontSize = updateLabelFromSlider('majorFontSize', 'majorFontSizeSlider');
     minorFontSize = updateLabelFromSlider('minorFontSize', 'minorFontSizeSlider');
@@ -806,11 +814,13 @@ function parseParamsFromInputElements() {
     refsVertAlignment = updateLabelFromSlider('refsVertAlignment', 'refsVertAlignmentSlider');
     fwdRefsVertOffset = updateLabelFromSlider('fwdRefsVertOffset', 'fwdRefsVertOffsetSlider');
 
+    enableOutline = getBoolFromCheckbox('enableOutlineCheckbox');
     alignWithPixels = getBoolFromCheckbox('alignWithPixelsCheckbox');
     alignRefsHorizontally = getBoolFromCheckbox('alignRefsHorizontallyCheckbox');
     
     updateTextVerticalMargins(textVertMargins);
     updateFontSizes();
+    updateOutline();
 
     let urlParams = new URLSearchParams();
     updateUrlParamFromElement(urlParams, 'vs', 'verticalSpacingSlider');
@@ -823,6 +833,7 @@ function parseParamsFromInputElements() {
     updateUrlParamFromElement(urlParams, 'iw', 'connectionInletWidthSlider');
     updateUrlParamFromElement(urlParams, 'lm', 'connectionsMarginSlider');
     updateUrlParamFromElement(urlParams, 'lt', 'lineThicknessSlider');
+    updateUrlParamFromElement(urlParams, 'gp', 'globalPaddingSlider');
     
     updateUrlParamFromElement(urlParams, 'bfs', 'majorFontSizeSlider');
     updateUrlParamFromElement(urlParams, 'sfs', 'minorFontSizeSlider');
@@ -831,6 +842,7 @@ function parseParamsFromInputElements() {
     updateUrlParamFromElement(urlParams, 'rva', 'refsVertAlignmentSlider');
     updateUrlParamFromElement(urlParams, 'fro', 'fwdRefsVertOffsetSlider');
 
+    updateUrlParamFromCheckbox(urlParams, 'eo', 'enableOutlineCheckbox');
     updateUrlParamFromCheckbox(urlParams, 'awp', 'alignWithPixelsCheckbox');
     updateUrlParamFromCheckbox(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
 
@@ -861,6 +873,7 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'iw', 'connectionInletWidthSlider');
     updateSliderFromUrlParam(urlParams, 'lm', 'connectionsMarginSlider');
     updateSliderFromUrlParam(urlParams, 'lt', 'lineThicknessSlider');
+    updateSliderFromUrlParam(urlParams, 'gp', 'globalPaddingSlider');
     
     updateSliderFromUrlParam(urlParams, 'bfs', 'majorFontSizeSlider');
     updateSliderFromUrlParam(urlParams, 'sfs', 'minorFontSizeSlider');
@@ -869,6 +882,7 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'rva', 'refsVertAlignmentSlider');
     updateSliderFromUrlParam(urlParams, 'fro', 'fwdRefsVertOffsetSlider');
 
+    updateCheckboxFromUrlParam(urlParams, 'eo', 'enableOutlineCheckbox');
     updateCheckboxFromUrlParam(urlParams, 'awp', 'alignWithPixelsCheckbox');
     updateCheckboxFromUrlParam(urlParams, 'arh', 'alignRefsHorizontallyCheckbox');
 
@@ -959,6 +973,7 @@ function init() {
     document.getElementById("connectionInletWidthSlider").oninput = parseParamsFromInputElements;
     document.getElementById("connectionsMarginSlider").oninput = parseParamsFromInputElements;
     document.getElementById("lineThicknessSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("globalPaddingSlider").oninput = parseParamsFromInputElements;
 
     document.getElementById("majorFontSizeSlider").oninput = parseParamsFromInputElements;
     document.getElementById("minorFontSizeSlider").oninput = parseParamsFromInputElements;
@@ -967,6 +982,7 @@ function init() {
     document.getElementById("refsVertAlignmentSlider").oninput = parseParamsFromInputElements;
     document.getElementById("fwdRefsVertOffsetSlider").oninput = parseParamsFromInputElements;
 
+    document.getElementById("enableOutlineCheckbox").oninput = parseParamsFromInputElements;
     document.getElementById("alignWithPixelsCheckbox").oninput = parseParamsFromInputElements;
     document.getElementById("alignRefsHorizontallyCheckbox").oninput = parseParamsFromInputElements;
 
