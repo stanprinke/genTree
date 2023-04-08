@@ -27,7 +27,7 @@
             outline-style: solid;
             outline-color: red;
             outline-width: 2px;
-            outline-offset: 2px;
+            outline-offset: 0px;
         }
 
         #errors {
@@ -36,6 +36,9 @@
             color: red;
         }
 
+        .slider {
+            width: 300px;
+        }
     </style>
 </head>
 
@@ -48,31 +51,16 @@
             <td>
                 <div>
                     <div>
-                        <input type="range" value="1000" step="50" min="400" max="4000" class="slider" id="graphWidthSlider">
-                        draw area width <span id="graphWidth"></span>
-                    </div>
-                    <div>
-                        <input type="range" value="1000" step="50" min="400" max="4000" class="slider" id="graphHeightSlider">
-                        draw area height <span id="graphHeight"></span>
+                        <input type="range" value="1000" step="100" min="400" max="6000" class="slider" id="graphSizeSlider">
+                        Draw area size: <span id="graphSize"></span>
                     </div>
                 </div>
             </td>
         </tr></table>
 
         <hr/>
-        <h4>Input data (graphviz):</h4>
-        <textarea id="inputData" maxlength="65535">
-strict digraph mygraph {
-    node [shape=box];
-
-    100 -> 200 -> 300
-    400 -> 200 -> 300
-    100 [label="Anna CZERSKA"]
-    200 [label="Anna RACIBORSKA"]
-    300 [label="Jan I ks. RACIBORSKI"]
-    400 [label="aaa aaa \n bbb bbb"]
-}
-        </textarea>
+        <h4>Input data (graphviz): <button class="btn btn-warning" onclick="clearInputData()">use default input</button></h4>
+        <textarea id="inputData" maxlength="65535"></textarea>
         <p id="errors"></p>
         <hr/>
         <p>Redraw time: <span id="redrawTime"></span> [ms]</p>

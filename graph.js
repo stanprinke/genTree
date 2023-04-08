@@ -1,9 +1,10 @@
 let graphContainer = document.getElementById("graphContainer");
 let redrawTime = document.getElementById("redrawTime");
+let redrawDelay = null;
 let inputDataChangedDelay = null;
 let graphviz = null;
-let firstRedraw = true;
-
+let graphSize = 100;
+const localStoreKey = "graphInputData";
 
 /** current timestamp as string: yyyy-MM-dd_HH-mm-ss */
 function getTimestamp() {
@@ -46,7 +47,6 @@ async function save2png() {
     }
 }
 
-
 function resetZoom() {
     graphviz.resetZoom();
 }
@@ -74,20 +74,42 @@ function redraw() {
 }
 
 function redrawImpl() {
-    graphviz = d3.select("#graphContainer")
+    graphviz = d3
+        .select("#graphContainer")
         .graphviz({
             useWorker: false,
             fit: true,
-            width: graphContainer.style.width,
-            height: graphContainer.style.height
-        })
-        .dot(document.getElementById("inputData").value)
-        .render();
+            width: parseInt(graphContainer.style.width),
+            height: parseInt(graphContainer.style.height)
+        });
 
-    if (firstRedraw)
-        firstRedraw = false;
-    else 
-        resetZoom();
+    graphviz.dot(document.getElementById("inputData").value)
+        .render()
+        .on('end', () => {
+            graphviz.resetZoom();
+
+            let box = document.getElementById('graph0').getBoundingClientRect();
+            let newWidth = Math.ceil(box.width);
+            let newHeight = Math.ceil(box.height);
+            if (newWidth < graphSize-1 && newHeight < graphSize-1) {
+                newWidth = graphSize;
+                newHeight = graphSize;
+            }
+            let currWidth = parseInt(graphContainer.style.width);
+            let currHeight = parseInt(graphContainer.style.height);
+            
+            if (newWidth != currWidth || newHeight != currHeight) {
+                console.log(`graph size is ${newWidth}x${newHeight}, container size is ${currWidth}x${currHeight}, resizing container...`);
+                graphContainer.style.width = newWidth + 'px';
+                graphContainer.style.height = newHeight + 'px';
+                redrawWithDelay();
+            }
+        });
+}
+
+function redrawWithDelay() {
+    clearTimeout(redrawDelay);
+    redrawDelay = setTimeout(redraw, 150);
 }
 
 function onInputDataChangedWithDelay() {
@@ -96,29 +118,75 @@ function onInputDataChangedWithDelay() {
 }
 
 function onInputDataChanged() {
+    localStorage.setItem(localStoreKey, document.getElementById("inputData").value);
     redraw();
 }
 
 function updateLabelFromSlider(labelName, sliderName) {
-    let slider = document.getElementById(sliderName);
-    document.getElementById(labelName).innerHTML = slider.value;
+    let slider = document.getElementById(sliderName); 
+    document.getElementById(labelName).innerHTML = slider.value + ' px';
     return parseInt(slider.value);
 }
 
 function parseParamsFromInputElements() {
-    graphContainer.style.width = updateLabelFromSlider('graphWidth', 'graphWidthSlider') + 'px';
-    graphContainer.style.height = updateLabelFromSlider('graphHeight', 'graphHeightSlider') + 'px';
+    graphSize = updateLabelFromSlider('graphSize', 'graphSizeSlider');
+    graphContainer.style.width = graphSize + 'px';
+    graphContainer.style.height = graphSize + 'px';
+
+    let urlParams = new URLSearchParams();
+    updateUrlParamFromElement(urlParams, 'gs', 'graphSizeSlider');
+    window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
     redraw();
 }
 
 function init() {
+    populateInputTextArea();
+    parseUrlParams();
     document.getElementById("inputData").oninput = onInputDataChangedWithDelay;
-
-    document.getElementById("graphWidthSlider").oninput = parseParamsFromInputElements;
-    document.getElementById("graphHeightSlider").oninput = parseParamsFromInputElements;
-
+    document.getElementById("graphSizeSlider").oninput = parseParamsFromInputElements;
     parseParamsFromInputElements();
+}
+
+function parseUrlParams() {
+    let urlParams = new URLSearchParams(window.location.search);
+
+    updateSliderFromUrlParam(urlParams, 'gs', 'graphSizeSlider');
+}
+
+function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
+    if (urlParams.has(paramName)) {
+        document.getElementById(sliderName).value = parseInt(urlParams.get(paramName)) || 0;
+    }
+}
+
+function updateUrlParamFromElement(urlParams, paramName, elementName) {
+    let elem = document.getElementById(elementName);
+    urlParams.append(paramName, elem.value);
+}
+
+function defaultInputData() {
+    return `strict digraph mygraph {
+    node [shape=box];
+
+    100 -> 200 -> 300
+    400 -> 200 -> 300
+    100 [label="Anna CZERSKA"]
+    200 [label="Anna RACIBORSKA"]
+    300 [label="Jan I ks. RACIBORSKI"]
+    400 [label="aaa aaa \\n bbb bbb"]
+}
+`;
+}
+
+function clearInputData() {
+    localStorage.removeItem(localStoreKey);
+    populateInputTextArea();
+    redraw();
+}
+
+function populateInputTextArea() {
+    document.getElementById("inputData").value = localStorage.getItem(localStoreKey)?? defaultInputData();
 }
 
 
