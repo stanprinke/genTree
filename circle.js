@@ -2,7 +2,7 @@ let circleContainer = document.getElementById("circleContainer");
 let redrawTime = document.getElementById("redrawTime");
 let circleContainerBox = null;
 let circleRadiusPlusPadding = 0;
-let inputDataChangedDelay = null;
+let inputDelay = null;
 let removeZoomListener = null;
 const localStoreKey = "circleInputData";
 
@@ -59,6 +59,7 @@ let enableOutline = false;
 
     function showError(message, details) {
         circleContainer.style.width = '999px';
+        circleContainer.style.height = '200px';
 
         circleContainer.innerHTML =
             `<div style="outline: 12px solid red; padding: 50px; width: fit-content;">
@@ -100,8 +101,14 @@ function updateOutline() {
     myRule.style.outlineOffset = (enableOutline ? -lineThickness : 0) + "px";
 }
 
+function redrawWithDelay() {
+    clearTimeout(inputDelay);
+    inputDelay = setTimeout(redraw, 200);
+}
+
 function redraw() {
     try {
+        console.log("redrawing...");
         const start = performance.now();
         redrawImpl();
         const elapsed = parseInt(performance.now() - start);
@@ -214,14 +221,9 @@ function drawAncestorPath(isKnown, x1, y1, x2, y2, x3, y3, x4, y4, innerRadius, 
     path.stroke({ color: '#000', width: lineThickness, linecap: 'butt', linejoin: 'round' })
 }
 
-function onInputDataChangedWithDelay() {
-    clearTimeout(inputDataChangedDelay);
-    inputDataChangedDelay = setTimeout(onInputDataChanged, 200);
-}
-
 function onInputDataChanged() {
     localStorage.setItem(localStoreKey, document.getElementById("circleInputData").value);
-    redraw();
+    redrawWithDelay();
 }
 
 function defaultInputData() {
@@ -236,7 +238,7 @@ function defaultInputData() {
 function clearInputData() {
     localStorage.removeItem(localStoreKey);
     populateInputTextArea();
-    redraw();
+    redrawWithDelay();
 }
 
 function populateInputTextArea() {
@@ -271,14 +273,14 @@ function parseParamsFromInputElements() {
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
-    redraw();
+    redrawWithDelay();
 }
 
 function clearInputParams() {
     window.location = window.location.href.split('?')[0];
     parseUrlParams();
     parseParamsFromInputElements();
-    redraw();
+    redrawWithDelay();
 }
 
 function parseUrlParams() {
@@ -344,7 +346,7 @@ const checkZoomLevel = () => {
         warning.innerHTML = `Warning! Browser zoom is set to ${currentZoom}%, output PNG files will also be scaled`;
     }
 
-    redraw();
+    redrawWithDelay();
 };
 
 function init() {
@@ -352,7 +354,7 @@ function init() {
     checkZoomLevel();
     parseUrlParams();
 
-    document.getElementById("circleInputData").oninput = onInputDataChangedWithDelay;
+    document.getElementById("circleInputData").oninput = onInputDataChanged;
 
     document.getElementById("segmentThicknessSlider").oninput = parseParamsFromInputElements;
     document.getElementById("lineThicknessSlider").oninput = parseParamsFromInputElements;
@@ -361,7 +363,7 @@ function init() {
     document.getElementById("enableOutlineCheckbox").oninput = parseParamsFromInputElements;
 
     parseParamsFromInputElements();
-    onInputDataChangedWithDelay();
+    onInputDataChanged();
 }
 
 init();
