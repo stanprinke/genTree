@@ -84,9 +84,17 @@
                         <input type="range" value="10" step="1" min="2" max="100" class="slider" id="globalPaddingSlider">
                         Padding: <span id="globalPadding"></span>
                     </div>
+                    <div>
+                        <input type="range" value="-90" step="5" min="-180" max="180" class="slider" id="globalRotationSlider">
+                        Rotation: <span id="globalRotation"></span>°
+                    </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" role="switch" id="enableOutlineCheckbox">
                         <label class="form-check-label" for="enableOutlineCheckbox">Outline enabled</label>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="instantRedrawCheckbox" checked>
+                        <label class="form-check-label" for="instantRedrawCheckbox">Instant redraw on params change</label>
                     </div>
                 </div>
             </td>

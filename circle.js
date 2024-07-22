@@ -10,7 +10,9 @@ const localStoreKey = "circleInputData";
 let segmentThickness = 20;
 let lineThickness = 0;
 let globalPadding = 0;
+let globalRotation = 0;
 let enableOutline = false;
+let instantRedraw = true;
 
 /**** Saving as PNG ****/ 
 
@@ -108,7 +110,6 @@ function redrawWithDelay() {
 
 function redraw() {
     try {
-        console.log("redrawing...");
         const start = performance.now();
         redrawImpl();
         const elapsed = parseInt(performance.now() - start);
@@ -168,8 +169,8 @@ function drawAncestor(ancestorIndex, isKnown) {
     let genSize = Math.pow(2, generation);
     let positionInGen = ancestorIndex - genSize + 1;
     let anglePerAncestorInThisGen = Math.PI * 2 / genSize;
-    let startAngle = positionInGen * anglePerAncestorInThisGen;
-    let endAngle = (positionInGen + 1) * anglePerAncestorInThisGen;
+    let startAngle = positionInGen * anglePerAncestorInThisGen + Math.PI*(globalRotation/180.0);
+    let endAngle = (positionInGen + 1) * anglePerAncestorInThisGen + Math.PI*(globalRotation/180.0);
     let outerRadius = (generation) * segmentThickness;
     let innerRadius = (generation -1) * segmentThickness;
     
@@ -259,8 +260,10 @@ function parseParamsFromInputElements() {
     segmentThickness = updateLabelFromSlider('segmentThickness', 'segmentThicknessSlider');
     lineThickness = updateLabelFromSlider('lineThickness', 'lineThicknessSlider');
     globalPadding = updateLabelFromSlider('globalPadding', 'globalPaddingSlider');
+    globalRotation = updateLabelFromSlider('globalRotation', 'globalRotationSlider');
 
     enableOutline = getBoolFromCheckbox('enableOutlineCheckbox');
+    instantRedraw = getBoolFromCheckbox('instantRedrawCheckbox');
 
     updateOutline();
 
@@ -268,12 +271,17 @@ function parseParamsFromInputElements() {
     updateUrlParamFromElement(urlParams, 'lm', 'segmentThicknessSlider');
     updateUrlParamFromElement(urlParams, 'lt', 'lineThicknessSlider');
     updateUrlParamFromElement(urlParams, 'gp', 'globalPaddingSlider');
+    updateUrlParamFromElement(urlParams, 'gr', 'globalRotationSlider');
 
     updateUrlParamFromCheckbox(urlParams, 'eo', 'enableOutlineCheckbox');
+    updateUrlParamFromCheckbox(urlParams, 'ir', 'instantRedrawCheckbox');
 
     window.history.replaceState(null, "", window.location.href.split('?')[0] + '?' + urlParams.toString());
 
-    redrawWithDelay();
+    if (instantRedraw)
+        redraw();
+    else
+        redrawWithDelay();
 }
 
 function clearInputParams() {
@@ -289,8 +297,10 @@ function parseUrlParams() {
     updateSliderFromUrlParam(urlParams, 'lm', 'segmentThicknessSlider');
     updateSliderFromUrlParam(urlParams, 'lt', 'lineThicknessSlider');
     updateSliderFromUrlParam(urlParams, 'gp', 'globalPaddingSlider');
+    updateSliderFromUrlParam(urlParams, 'gr', 'globalRotationSlider');
 
     updateCheckboxFromUrlParam(urlParams, 'eo', 'enableOutlineCheckbox');
+    updateCheckboxFromUrlParam(urlParams, 'ir', 'instantRedrawCheckbox');
 }
 
 function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
@@ -359,8 +369,10 @@ function init() {
     document.getElementById("segmentThicknessSlider").oninput = parseParamsFromInputElements;
     document.getElementById("lineThicknessSlider").oninput = parseParamsFromInputElements;
     document.getElementById("globalPaddingSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("globalRotationSlider").oninput = parseParamsFromInputElements;
 
     document.getElementById("enableOutlineCheckbox").oninput = parseParamsFromInputElements;
+    document.getElementById("instantRedrawCheckbox").oninput = parseParamsFromInputElements;
 
     parseParamsFromInputElements();
     onInputDataChanged();
