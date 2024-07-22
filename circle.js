@@ -8,6 +8,7 @@ const localStoreKey = "circleInputData";
 
 // editable with sliders:
 let segmentThickness = 20;
+let segmentScaling = 1;
 let lineThickness = 0;
 let globalPadding = 0;
 let globalRotation = 0;
@@ -146,21 +147,37 @@ function redrawImpl() {
     while(maxGeneration == generationForArrayIndex(boolArray.length + 1 )) {
         boolArray.push(false);
     }
+
+    let maxRadius = segmentThickness;
+    for (let i = 1; i < maxGeneration; i++) {
+        maxRadius = segmentScaling * maxRadius + segmentThickness;
+    }
     
-    circleRadiusPlusPadding = Math.round((maxGeneration)*segmentThickness + globalPadding + lineThickness/2 + (enableOutline?lineThickness:0));
+    circleRadiusPlusPadding = Math.round(maxRadius + globalPadding + lineThickness/2 + (enableOutline?lineThickness:0));
 
     circleContainer.style.width = circleRadiusPlusPadding*2 + 'px';
     circleContainer.style.height = circleRadiusPlusPadding*2 + 'px';
 
     circleContainerBox = circleContainer.getBoundingClientRect();
 
+    let innerRadius = 0;
+    let outerRadius = segmentThickness;
+    let currentGen = 1;
+    
     for (let i = 0; i < boolArray.length; i++) {
-        drawAncestor(i+1, boolArray[i]);
+        let newGen = generationForArrayIndex(i+1);
+        if (currentGen < newGen)
+        {
+            currentGen = newGen;
+            innerRadius = outerRadius;
+            outerRadius = segmentScaling * outerRadius + segmentThickness;
+        }
+        drawAncestor(i+1, boolArray[i], innerRadius, outerRadius);
     }
 }
 
 //ancestorIndex: 1-father, 2-mother, 3-father's father, etc.
-function drawAncestor(ancestorIndex, isKnown) {
+function drawAncestor(ancestorIndex, isKnown, innerRadius, outerRadius) {
     if (ancestorIndex <= 0)
         throw new Error("got invalid ancestorIndex: " + ancestorIndex);
 
@@ -171,8 +188,6 @@ function drawAncestor(ancestorIndex, isKnown) {
     let anglePerAncestorInThisGen = Math.PI * 2 / genSize;
     let startAngle = positionInGen * anglePerAncestorInThisGen + Math.PI*(globalRotation/180.0);
     let endAngle = (positionInGen + 1) * anglePerAncestorInThisGen + Math.PI*(globalRotation/180.0);
-    let outerRadius = (generation) * segmentThickness;
-    let innerRadius = (generation -1) * segmentThickness;
     
     let startSinus = Math.sin(startAngle);
     let startCosin = Math.cos(startAngle);
@@ -258,6 +273,7 @@ function getBoolFromCheckbox(elementName) {
 
 function parseParamsFromInputElements() {
     segmentThickness = updateLabelFromSlider('segmentThickness', 'segmentThicknessSlider');
+    segmentScaling = updateLabelFromSlider('segmentScaling', 'segmentScalingSlider');
     lineThickness = updateLabelFromSlider('lineThickness', 'lineThicknessSlider');
     globalPadding = updateLabelFromSlider('globalPadding', 'globalPaddingSlider');
     globalRotation = updateLabelFromSlider('globalRotation', 'globalRotationSlider');
@@ -269,6 +285,7 @@ function parseParamsFromInputElements() {
 
     let urlParams = new URLSearchParams();
     updateUrlParamFromElement(urlParams, 'lm', 'segmentThicknessSlider');
+    updateUrlParamFromElement(urlParams, 'sc', 'segmentScalingSlider');
     updateUrlParamFromElement(urlParams, 'lt', 'lineThicknessSlider');
     updateUrlParamFromElement(urlParams, 'gp', 'globalPaddingSlider');
     updateUrlParamFromElement(urlParams, 'gr', 'globalRotationSlider');
@@ -295,6 +312,7 @@ function parseUrlParams() {
     let urlParams = new URLSearchParams(window.location.search);
 
     updateSliderFromUrlParam(urlParams, 'lm', 'segmentThicknessSlider');
+    updateSliderFromUrlParam(urlParams, 'sc', 'segmentScalingSlider');
     updateSliderFromUrlParam(urlParams, 'lt', 'lineThicknessSlider');
     updateSliderFromUrlParam(urlParams, 'gp', 'globalPaddingSlider');
     updateSliderFromUrlParam(urlParams, 'gr', 'globalRotationSlider');
@@ -307,7 +325,7 @@ function updateSliderFromUrlParam(urlParams, paramName, sliderName) {
     if (urlParams.has(paramName)) {
         let test = urlParams.get(paramName);
         let test2 = parseInt(test);
-        document.getElementById(sliderName).value = parseInt(urlParams.get(paramName)) || 0;
+        document.getElementById(sliderName).value = parseFloat(urlParams.get(paramName)) || 0;
     }
 }
 
@@ -367,6 +385,7 @@ function init() {
     document.getElementById("circleInputData").oninput = onInputDataChanged;
 
     document.getElementById("segmentThicknessSlider").oninput = parseParamsFromInputElements;
+    document.getElementById("segmentScalingSlider").oninput = parseParamsFromInputElements;
     document.getElementById("lineThicknessSlider").oninput = parseParamsFromInputElements;
     document.getElementById("globalPaddingSlider").oninput = parseParamsFromInputElements;
     document.getElementById("globalRotationSlider").oninput = parseParamsFromInputElements;
